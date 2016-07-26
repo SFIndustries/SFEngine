@@ -14,10 +14,13 @@ import static android.opengl.GLES20.*;
 import static android.opengl.GLUtils.*;
 import static android.opengl.Matrix.*;
 
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
@@ -167,5 +170,22 @@ public class MainActivity extends Activity {
         if (rendererSet) {
             glSurfaceView.onResume();
         }
+    }
+
+    void mainMenu()
+    {
+        LinearLayout llRoot = (LinearLayout) findViewById(R.id.ll_root);
+
+        LinearLayout llMenu = new LinearLayout(this);
+        LinearLayout.LayoutParams llparams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+        llMenu.setLayoutParams(llparams);
+        llMenu.setOrientation(LinearLayout.VERTICAL);
+        llMenu.setGravity(Gravity.CENTER);
+
+        llRoot.addView(llMenu);
+
+
+
+
     }
 }

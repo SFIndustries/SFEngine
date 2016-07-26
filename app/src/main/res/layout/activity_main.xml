@@ -8,6 +8,22 @@
         android:layout_height="match_parent"
         android:id="@+id/glSurfaceView"/>
 
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/ll_root"
+        android:gravity="center">
+
+        <Button
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:text="New Button"
+            android:id="@+id/button"
+            style="@style/btn_blue"
+            android:background="@drawable/btn_blue" />
+    </LinearLayout>
+
     <!--android:layout_alignParentTop="true"-->
         <!--android:layout_alignParentLeft="true"-->
         <!--android:layout_alignParentStart="true" />-->
