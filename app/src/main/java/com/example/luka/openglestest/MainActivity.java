@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.ConfigurationInfo;
+import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -14,12 +15,16 @@ import static android.opengl.GLES20.*;
 import static android.opengl.GLUtils.*;
 import static android.opengl.Matrix.*;
 
+import android.text.Layout;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -36,6 +41,8 @@ public class MainActivity extends Activity {
         //glSurfaceView = new GLSurfaceView(this);
 
         setContentView(R.layout.activity_main);
+
+        mainMenu();
 
         try {
             glSurfaceView = (GLSurfaceView) findViewById(R.id.glSurfaceView);
@@ -174,18 +181,47 @@ public class MainActivity extends Activity {
 
     void mainMenu()
     {
+        Resources r = getResources();
+        DisplayMetrics dm = r.getDisplayMetrics();
+
         LinearLayout llRoot = (LinearLayout) findViewById(R.id.ll_root);
+        llRoot.setWeightSum(1.0f);
+
+        LinearLayout.LayoutParams llparams;
 
         LinearLayout llMenu = new LinearLayout(this);
-        LinearLayout.LayoutParams llparams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+        llparams = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 0.4f);
         llMenu.setLayoutParams(llparams);
         llMenu.setOrientation(LinearLayout.VERTICAL);
         llMenu.setGravity(Gravity.CENTER);
+        llMenu.setWeightSum(1.0f);
 
+        LinearLayout llMenuL = new LinearLayout(this);
+        llparams = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 0.3f);
+        llMenuL.setLayoutParams(llparams);
+        llMenuL.setOrientation(LinearLayout.VERTICAL);
+
+        LinearLayout llMenuR = new LinearLayout(this);
+        llparams = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 0.3f);
+        llMenuR.setLayoutParams(llparams);
+        llMenuR.setOrientation(LinearLayout.VERTICAL);
+
+        Button btnNewGame = new Button(this);
+        btnNewGame.setBackgroundResource(R.drawable.btn_blue);
+        llparams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, 0, 0.2f);
+        btnNewGame.setLayoutParams(llparams);
+        btnNewGame.setText("New Game");
+        btnNewGame.setAlpha(1.0f);
+        btnNewGame.setTextColor(0xffffffff);
+        float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, dm);
+        btnNewGame.setTextSize(px);
+
+
+        llMenu.addView(btnNewGame);
+
+        llRoot.addView(llMenuL);
         llRoot.addView(llMenu);
-
-
-
+        llRoot.addView(llMenuR);
 
     }
 }
