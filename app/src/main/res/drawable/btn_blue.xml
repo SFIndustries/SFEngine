@@ -1,8 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--bright = #cfe2f3
+    medium = #3d85c6
+    dark = #073763-->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_pressed="true"
-        android:drawable="@drawable/btn_blue_alt_pressed" /> <!-- pressed -->
-    <item android:state_focused="true"
-        android:drawable="@drawable/btn_blue_alt_pressed" /> <!-- focused -->
-    <item android:drawable="@drawable/btn_blue_alt_default" /> <!-- default -->
+   <item android:state_pressed="true">
+       <shape android:shape="rectangle">
+           <corners
+               android:radius="50dp"
+               />
+           <gradient
+               android:gradientRadius="100"
+               android:centerX="50%"
+               android:centerY="50%"
+               android:startColor="#cfe2f3"
+               android:endColor="#3d85c6"
+               android:type="radial"
+               /> <!--bright - medium-->
+           <padding
+               android:left="0dp"
+               android:top="0dp"
+               android:right="0dp"
+               android:bottom="0dp"
+               />
+           <size
+               android:width="320dp"
+               android:height="60dp"
+               />
+           <stroke
+               android:width="3dp"
+               android:color="#cfe2f3"
+               /> <!--bright-->
+       </shape>
+   </item>
+   <item android:state_focused="true">
+       <shape android:shape="rectangle">
+           <corners
+               android:radius="50dp"
+               />
+           <gradient
+               android:gradientRadius="100"
+               android:centerX="50%"
+               android:centerY="50%"
+               android:startColor="#cfe2f3"
+               android:endColor="#3d85c6"
+               android:type="radial"
+               /> <!--bright - medium-->
+           <padding
+               android:left="0dp"
+               android:top="0dp"
+               android:right="0dp"
+               android:bottom="0dp"
+               />
+           <size
+               android:width="320dp"
+               android:height="60dp"
+               />
+           <stroke
+               android:width="3dp"
+               android:color="#cfe2f3"
+               /> <!--bright-->
+       </shape>
+   </item>
+   <item>
+       <shape android:shape="rectangle">
+           <corners
+               android:radius="50dp"
+               />
+           <gradient
+               android:gradientRadius="100"
+               android:centerX="50%"
+               android:centerY="50%"
+               android:startColor="#3d85c6"
+               android:endColor="#073763"
+               android:type="radial"
+               /> <!--medium - dark-->
+           <padding
+               android:left="0dp"
+               android:top="0dp"
+               android:right="0dp"
+               android:bottom="0dp"
+               />
+           <size
+               android:width="320dp"
+               android:height="60dp"
+               />
+           <stroke
+               android:width="3dp"
+               android:color="#073763"
+               /> <!--dark-->
+       </shape>
+   </item>
 </selector>

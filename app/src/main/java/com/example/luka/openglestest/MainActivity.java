@@ -11,22 +11,18 @@ import android.os.Build;
 import android.os.Bundle;
 
 import android.opengl.GLSurfaceView;
-import static android.opengl.GLES20.*;
-import static android.opengl.GLUtils.*;
-import static android.opengl.Matrix.*;
 
-import android.text.Layout;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Gravity;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+
+import com.example.luka.openglestest.util.MenuButton;
+import com.example.luka.openglestest.util.MenuButtonStyle;
 
 public class MainActivity extends Activity {
 
@@ -34,11 +30,19 @@ public class MainActivity extends Activity {
     private boolean rendererSet = false;
     float stariX, stariY;
 
+    Resources r;
+    DisplayMetrics dm;
+    float dmScale;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //glSurfaceView = new GLSurfaceView(this);
+
+        r = getResources();
+        dm = r.getDisplayMetrics();
+        dmScale = dm.density;
 
         setContentView(R.layout.activity_main);
 
@@ -46,9 +50,7 @@ public class MainActivity extends Activity {
 
         try {
             glSurfaceView = (GLSurfaceView) findViewById(R.id.glSurfaceView);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -76,12 +78,9 @@ public class MainActivity extends Activity {
             // Assign our renderer.
 
 
-
             try {
                 glSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
 
@@ -96,11 +95,9 @@ public class MainActivity extends Activity {
         }
 
 
-        glSurfaceView.setOnTouchListener(new View.OnTouchListener()
-        {
+        glSurfaceView.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public boolean onTouch(View v, MotionEvent event)
-            {
+            public boolean onTouch(View v, MotionEvent event) {
                 if (event != null) {
 
                     final float aspectRatio = v.getWidth() > v.getHeight() ?
@@ -110,18 +107,13 @@ public class MainActivity extends Activity {
                     final float normalizedX;
                     final float normalizedY;
 
-                    if (v.getWidth() > v.getHeight())
-                    {
-                         normalizedX = (event.getX() / (float) v.getWidth()) * 2 * aspectRatio - aspectRatio;
-                         normalizedY = -((event.getY() / (float) v.getHeight()) * 2 - 1);
-                    }
-
-                    else
-                    {
+                    if (v.getWidth() > v.getHeight()) {
+                        normalizedX = (event.getX() / (float) v.getWidth()) * 2 * aspectRatio - aspectRatio;
+                        normalizedY = -((event.getY() / (float) v.getHeight()) * 2 - 1);
+                    } else {
                         normalizedX = (event.getX() / (float) v.getWidth()) * 2 - 1;
                         normalizedY = -((event.getY() / (float) v.getHeight()) * 2 * aspectRatio - aspectRatio);
                     }
-
 
 
                     if (event.getAction() == MotionEvent.ACTION_DOWN) {
@@ -131,9 +123,7 @@ public class MainActivity extends Activity {
                                 mojRenderer.handleTouchPress(normalizedX, normalizedY);
                             }
                         });
-                    }
-
-                    else if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                    } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
                         glSurfaceView.queueEvent(new Runnable() {
                             @Override
                             public void run() {
@@ -145,17 +135,12 @@ public class MainActivity extends Activity {
                     }
 
 
-
                     return true;
                 } else return false;
             }
 
 
-
-
-
-
-         });
+        });
 
 
         //setContentView(glSurfaceView);
@@ -179,49 +164,60 @@ public class MainActivity extends Activity {
         }
     }
 
-    void mainMenu()
-    {
-        Resources r = getResources();
-        DisplayMetrics dm = r.getDisplayMetrics();
-
+    void mainMenu() {
         LinearLayout llRoot = (LinearLayout) findViewById(R.id.ll_root);
+        llRoot.setBackgroundColor(0x80073763); // blue = 0x80073763, red = 0x80660000, green = 0x80274e13
+        //llRoot.setAlpha(0.7f);
         llRoot.setWeightSum(1.0f);
 
-        LinearLayout.LayoutParams llparams;
+        LinearLayout.LayoutParams llParams;
 
         LinearLayout llMenu = new LinearLayout(this);
-        llparams = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 0.4f);
-        llMenu.setLayoutParams(llparams);
+        llParams = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 0.3f);
+        llMenu.setLayoutParams(llParams);
         llMenu.setOrientation(LinearLayout.VERTICAL);
         llMenu.setGravity(Gravity.CENTER);
         llMenu.setWeightSum(1.0f);
 
         LinearLayout llMenuL = new LinearLayout(this);
-        llparams = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 0.3f);
-        llMenuL.setLayoutParams(llparams);
+        llParams = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 0.35f);
+        llMenuL.setLayoutParams(llParams);
         llMenuL.setOrientation(LinearLayout.VERTICAL);
 
         LinearLayout llMenuR = new LinearLayout(this);
-        llparams = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 0.3f);
-        llMenuR.setLayoutParams(llparams);
+        llParams = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 0.35f);
+        llMenuR.setLayoutParams(llParams);
         llMenuR.setOrientation(LinearLayout.VERTICAL);
 
-        Button btnNewGame = new Button(this);
-        btnNewGame.setBackgroundResource(R.drawable.btn_blue);
-        llparams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, 0, 0.2f);
-        btnNewGame.setLayoutParams(llparams);
-        btnNewGame.setText("New Game");
-        btnNewGame.setAlpha(1.0f);
-        btnNewGame.setTextColor(0xffffffff);
-        float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, dm);
-        btnNewGame.setTextSize(px);
+        llParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, 0, 0.12f);
+        llParams.setMargins(0, DpToPixels(6, dmScale), 0, DpToPixels(6, dmScale));
+        MenuButtonStyle mbs = new MenuButtonStyle(R.drawable.btn_blue, llParams, DpToPixels(20, dmScale), 0xffffffff); // (int backgroundResource, LinearLayout.LayoutParams llp, int textSize, int textColor)
 
+        MenuButton btnNewGame = new MenuButton(this, mbs, getString(R.string.main_newgame)); // (Context context, MenuButtonStyle mbs, String text)
+        MenuButton btnScoreboard = new MenuButton(this, mbs, getString(R.string.main_scoreboard));
+        MenuButton btnSettings = new MenuButton(this, mbs, getString(R.string.main_settings));
+        MenuButton btnCredits = new MenuButton(this, mbs, getString(R.string.main_credits));
+        MenuButton btnQuitGame = new MenuButton(this, mbs, getString(R.string.main_quitgame));
 
         llMenu.addView(btnNewGame);
+        llMenu.addView(btnScoreboard);
+        llMenu.addView(btnSettings);
+        llMenu.addView(btnCredits);
+        llMenu.addView(btnQuitGame);
 
         llRoot.addView(llMenuL);
         llRoot.addView(llMenu);
         llRoot.addView(llMenuR);
 
+    }
+
+    static int DpToPixels(int dp, float scale)
+    {
+        return (int) (dp * scale + 0.5f);
+    }
+
+    static int PixelsToDp(int px, float scale)
+    {
+        return (int) ((px/scale) + 0.5f);
     }
 }
