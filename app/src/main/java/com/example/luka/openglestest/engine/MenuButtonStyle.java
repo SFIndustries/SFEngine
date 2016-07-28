@@ -1,4 +1,4 @@
-package com.example.luka.openglestest.util;
+package com.example.luka.openglestest.engine;
 
 import android.widget.LinearLayout;
 
