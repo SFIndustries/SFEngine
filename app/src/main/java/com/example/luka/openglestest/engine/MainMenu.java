@@ -51,6 +51,6 @@ public class MainMenu extends LinearLayout
         this.addView(llMenu);
         this.addView(llMenuR);
 
-        this.setTag("mainmenu");
+        //this.setTag("mainmenu");
     }
 }
