@@ -1,9 +1,6 @@
-package com.example.luka.openglestest.util;
+package com.example.luka.openglestest.engine;
 
 import android.content.Context;
-import android.content.res.Resources;
-import android.util.DisplayMetrics;
-import android.util.TypedValue;
 import android.widget.Button;
 
 /**
