@@ -7,6 +7,7 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.ConfigurationInfo;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -33,8 +34,10 @@ public class MainActivity extends Activity {
     DisplayMetrics dm;
     float dmScale;
     MainMenu mainMenu;
+    MenuButtonStyle mbs;
     LinearLayout llRoot;
     LinearLayout.LayoutParams llParams;
+
 
 
     @Override
@@ -185,14 +188,18 @@ public class MainActivity extends Activity {
     {
 
         llRoot = (LinearLayout) findViewById(R.id.ll_root);
-        mainMenu = new MainMenu(this, llRoot, 0x80073763);
+        //mainMenu = new MainMenu(this, llRoot, 0x80073763); // b
+        //mainMenu = new MainMenu(this, llRoot, 0x80660000); // r
+        mainMenu = new MainMenu(this, llRoot, 0x80274e13); // g
         llRoot.addView(mainMenu);
 
         llParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, 0, 0.18f);
         llParams.setMargins(0, DpToPixels(6, dmScale), 0, DpToPixels(6, dmScale));
 
-        MenuButtonStyle mbs = new MenuButtonStyle(R.drawable.btn_blue, llParams, DpToPixels(20, dmScale), 0xffffffff);
+        //mbs = new MenuButtonStyle(R.drawable.btn_blue, llParams, DpToPixels(20, dmScale), 0xffffffff); // b
         // (int backgroundResource, LinearLayout.LayoutParams llp, int textSize, int textColor)
+        //mbs = new MenuButtonStyle(R.drawable.btn_red, llParams, DpToPixels(20, dmScale), 0xffffffff); // r
+        mbs = new MenuButtonStyle(R.drawable.btn_green, llParams, DpToPixels(20, dmScale), 0xffffffff); // g
 
         MenuButton btnNewGame = new MenuButton(this, mbs, getString(R.string.main_newgame));
         // (Context context, MenuButtonStyle mbs, String text)
@@ -209,6 +216,11 @@ public class MainActivity extends Activity {
 
     }
 
+    void deleteMenu(LinearLayout ll)
+    {
+        ll.removeAllViewsInLayout();
+    }
+
     static int DpToPixels(int dp, float scale)
     {
         return (int) (dp * scale + 0.5f);
@@ -217,5 +229,14 @@ public class MainActivity extends Activity {
     static int PixelsToDp(int px, float scale)
     {
         return (int) ((px/scale) + 0.5f);
+    }
+
+    static int colorHexWithAlpha (int colorHex, float alpha)
+    {
+        int alphaHex = Math.round(alpha * 255);
+        int r = Color.red(colorHex);
+        int g = Color.green(colorHex);
+        int b = Color.blue(colorHex);
+        return Color.argb(alphaHex, r, g, b);
     }
 }
