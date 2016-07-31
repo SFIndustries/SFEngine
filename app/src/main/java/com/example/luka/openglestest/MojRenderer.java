@@ -5,8 +5,11 @@ package com.example.luka.openglestest;
  */
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.PointF;
 import android.opengl.GLSurfaceView;
+import android.opengl.GLUtils;
 
 import com.example.luka.openglestest.util.TextResourceReader;
 
@@ -50,6 +53,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
     private final FloatBuffer vertexData;
     private final FloatBuffer normalData;
+    private final FloatBuffer uvData;
 
     private final Context context;
 
@@ -61,6 +65,8 @@ public class MojRenderer implements GLSurfaceView.Renderer
     private int aPositionLocation;
     private static final String A_NORMAL = "a_Normal";
     private int aNormalLocation;
+    private static final String A_TEXTURE = "a_Texture";
+    private int aTextureLocation;
 
     int ocisteXLocation;
 
@@ -70,6 +76,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
     float[] vrhoviObjekta;
     float[] normale;
+    float[] uv;
 
     private final float[] modelMatrix = new float[16];
     int modelMatrixLocation;
@@ -96,22 +103,27 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
     float[] lightPosition = {0.0f, 1.0f, 1.0f};
     int izvorSvjetlostiLocation;
+    int textureID;
+    int textureUniformLocation;
 
     public MojRenderer(Context context) {
 
+
+
         this.context = context;
-
-
 
         List lista;
 
-        lista =  TextResourceReader.UcitajObjektIzDatoteke(context, R.raw.f16_1);
+        lista =  TextResourceReader.UcitajObjektIzDatoteke(context, R.raw.f16_1_uv);
         //lista =  TextResourceReader.UcitajObjektIzDatoteke(context, R.raw.kocka1);
 
         vrhoviObjekta =  (float[]) lista.get(0);
         normale = (float[]) lista.get(1);
+        uv = (float[]) lista.get(2);
 
         //vrhoviObjekta = trokut;
+
+
 
         vertexData = ByteBuffer
                 .allocateDirect(vrhoviObjekta.length * BYTES_PER_FLOAT)
@@ -126,12 +138,20 @@ public class MojRenderer implements GLSurfaceView.Renderer
                 .asFloatBuffer();
         normalData.put(normale);
 
+        uvData = ByteBuffer
+                .allocateDirect(uv.length * BYTES_PER_FLOAT)
+                .order(ByteOrder.nativeOrder())
+                .asFloatBuffer();
+        uvData.put(uv);
+
+
     }
 
 
     @Override
     public void onSurfaceCreated(GL10 glUnused, EGLConfig config)
     {
+
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
         glEnable(GL_CULL_FACE);
@@ -141,6 +161,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
 
+        textureID = LoadTexture("torus_texture", context);
 
         //String vertexShaderSource = TextResourceReader.readTextFileFromResource(context, R.raw.simple_vertex_shader);
         //String fragmentShaderSource = TextResourceReader.readTextFileFromResource(context, R.raw.simple_fragment_shader);
@@ -156,7 +177,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
         uColorLocation = glGetUniformLocation(program, U_COLOR);
         aPositionLocation = glGetAttribLocation(program, A_POSITION);
         aNormalLocation = glGetAttribLocation(program, A_NORMAL);
-
+        aTextureLocation = glGetAttribLocation(program, A_TEXTURE);
 
 
 //        izvorSvjetlostiLocation = glGetUniformLocation(program, "izvorSvjetlosti");
@@ -170,11 +191,16 @@ public class MojRenderer implements GLSurfaceView.Renderer
         glVertexAttribPointer(aNormalLocation, POSITION_COMPONENT_COUNT, GL_FLOAT, false, 0, normalData);
         glEnableVertexAttribArray(aNormalLocation);
 
+        uvData.position(0);
+        glVertexAttribPointer(aTextureLocation, 2, GL_FLOAT, false, 0, uvData);
+        glEnableVertexAttribArray(aTextureLocation);
+
 
         uMatrixLocation = glGetUniformLocation(program, "MVP");
         viewMatrixLocation = glGetUniformLocation(program, "V");
         modelMatrixLocation = glGetUniformLocation(program, "M");
 
+        textureUniformLocation = glGetUniformLocation(program, "u_Texture");
 
         lightPositionLocation = glGetUniformLocation(program, "LightPosition_worldspace");
         eyePositionLocation = glGetUniformLocation(program, "ociste");
@@ -204,7 +230,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
 //            orthoM(projectionMatrix, 0, -1f, 1f, -aspectRatio, aspectRatio, -1f, 1f);
 //        }
 
-        perspectiveM(projectionMatrix, 0, 45, (float) width / (float) height, /*0f*/0.5f, 10f);
+        perspectiveM(projectionMatrix, 0, 45, (float) width / (float) height, /*0f*/0.1f, 10f);
 
 
         setIdentityM(modelMatrix, 0);
@@ -217,11 +243,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         //glDisable(GL_CULL_FACE);
 
-
-
-
         //setLookAtM(viewMatrix, 0, ocisteX, ocisteY, ocisteZ, gledisteX, gledisteY, gledisteZ, 0.0f, 0.0f, 1.0f);
-
 
         multiplyMM(viewProjectionMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
         multiplyMM(modelViewProjectionMatrix, 0, viewProjectionMatrix, 0, modelMatrix, 0);
@@ -233,6 +255,11 @@ public class MojRenderer implements GLSurfaceView.Renderer
         glUniform3f( lightPositionLocation, lightPosition[0], lightPosition[1], lightPosition[2] );
 
         //glEnable(GL_DEPTH_TEST);
+
+        glActiveTexture(GL_TEXTURE0);
+        // Set our "myTextureSampler" sampler to user Texture Unit 0
+        //glBindTexture(GL_TEXTURE_2D, textureID);
+        glUniform1i(textureUniformLocation, 0); // texture unit 0
 
         glDrawArrays(GL_TRIANGLES, 0, vrhoviObjekta.length / POSITION_COMPONENT_COUNT);
 
@@ -260,6 +287,39 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
         stariX = normalizedX;
         stariY = normalizedY;
+
+
+    }
+
+    public int LoadTexture(String resourceName, Context context)
+    {
+        final int[] textureHandle = new int[1];
+
+        glGenTextures(1, textureHandle, 0);
+
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inScaled = false;   // No pre-scaling
+
+        // Read in the resource
+        int resID = context.getResources().getIdentifier(resourceName, "raw", context.getPackageName());
+        final Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), resID, options);
+
+        // Bind to the texture in OpenGL
+
+        glBindTexture(GL_TEXTURE_2D, textureHandle[0]);
+
+        // Set filtering
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        // Load the bitmap into the bound texture.
+
+        GLUtils.texImage2D(GL_TEXTURE_2D, 0, bitmap, 0);
+
+        // Recycle the bitmap, since its data has been loaded into OpenGL.
+        bitmap.recycle();
+
+        return textureHandle[0];
 
 
     }

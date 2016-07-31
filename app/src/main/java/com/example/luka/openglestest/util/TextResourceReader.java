@@ -43,9 +43,12 @@ public class TextResourceReader
     {
         Vector vrhovi = new Vector();
         Vector normale = new Vector();
+        Vector UV = new Vector();
 
         Vector tempVrhovi = new Vector();
         Vector tempNormale = new Vector();
+        Vector tempUV = new Vector();
+
         try {
             InputStream inputStream =
                     context.getResources().openRawResource(resourceId);
@@ -68,6 +71,11 @@ public class TextResourceReader
                     tempNormale.add(Float.parseFloat(parts[2]) );
                     tempNormale.add(Float.parseFloat(parts[3]) );
                 }
+                else if (parts[0].equals("vt"))
+                {
+                    tempUV.add(Float.parseFloat(parts[1]) );
+                    tempUV.add(Float.parseFloat(parts[2]) );
+                }
                 else if (parts[0].equals("f"))
                 {
                     String[] parts1 = parts[1].split("/");
@@ -85,6 +93,15 @@ public class TextResourceReader
                     vrhovi.add(  tempVrhovi.elementAt( (Integer.parseInt(parts3[0])-1)*3 )  );
                     vrhovi.add(  tempVrhovi.elementAt( (Integer.parseInt(parts3[0])-1)*3+1 )  );
                     vrhovi.add(  tempVrhovi.elementAt( (Integer.parseInt(parts3[0])-1)*3+2 )  );
+
+                    UV.add(  tempUV.elementAt( (Integer.parseInt(parts1[1])-1)*2 )  );
+                    UV.add(  tempUV.elementAt( (Integer.parseInt(parts1[1])-1)*2+1 )  );
+
+                    UV.add(  tempUV.elementAt( (Integer.parseInt(parts2[1])-1)*2 )  );
+                    UV.add(  tempUV.elementAt( (Integer.parseInt(parts2[1])-1)*2+1 )  );
+
+                    UV.add(  tempUV.elementAt( (Integer.parseInt(parts3[1])-1)*2 )  );
+                    UV.add(  tempUV.elementAt( (Integer.parseInt(parts3[1])-1)*2+1 )  );
 
 
                     normale.add(  tempNormale.elementAt( (Integer.parseInt(parts1[2])-1)*3 )  );
@@ -116,14 +133,20 @@ public class TextResourceReader
         {
             floatArray[i] = (float) vrhovi.elementAt(i);
         }
-
         lista.add(floatArray);
+
         floatArray = new float[vrhovi.size()];
         for (int i=0; i<vrhovi.size(); i++)
         {
             floatArray[i] = (float) normale.elementAt(i);
         }
+        lista.add(floatArray);
 
+        floatArray = new float[UV.size()];
+        for (int i=0; i<UV.size(); i++)
+        {
+            floatArray[i] = (float) UV.elementAt(i);
+        }
         lista.add(floatArray);
 
         return lista;

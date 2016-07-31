@@ -4,6 +4,9 @@ precision highp float;
 
 attribute vec4 a_Position, a_Normal;
 
+varying vec2 v_TexCoordinate;
+attribute vec2 a_Texture;
+
 uniform mat4 MVP, M, V;
 uniform vec3 LightPosition_worldspace;
 uniform vec3 ociste;
@@ -27,6 +30,6 @@ void main()
 
     Normal_cameraspace = ( M * a_Normal).xyz;
 
-
+    v_TexCoordinate = a_Texture;
 
 }
