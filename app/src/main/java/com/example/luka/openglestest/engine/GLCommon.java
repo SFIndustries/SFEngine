@@ -28,6 +28,9 @@ public class GLCommon
     public static final float[] modelViewProjectionMatrix = new float[16];
     public static int modelViewProjectionMatrixLocation;
 
+    public static int aPositionLocation, aNormalLocation, aTextureLocation;
+    public static int textureUniformLocation;
+
     public static float[] lightPosition = {0.0f, 1.0f, 1.0f};
     public static int lightPositionLocation;
 
@@ -36,8 +39,10 @@ public class GLCommon
 
     public static float[] center = {0.0f, 0.0f, 0.0f};
 
-    public static int aPositionLocation, aNormalLocation, aTextureLocation;
-    public static int textureUniformLocation;
+    public static float fov = 45;
+    public static float nearZ = 0.1f;
+    public static float farZ = 10f;
+
 
     public static void InitShaders(Context context, int vertexShaderId, int fragmentShaderId)
     {
