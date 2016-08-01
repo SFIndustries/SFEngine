@@ -12,7 +12,7 @@ import android.graphics.PointF;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLUtils;
 
-import com.example.luka.openglestest.engine.GLCommon;
+import static com.example.luka.openglestest.engine.GLCommon.*;
 import com.example.luka.openglestest.engine.GLObject;
 import com.example.luka.openglestest.util.TextResourceReader;
 
@@ -25,29 +25,10 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL;
 import javax.microedition.khronos.opengles.GL10;
 
-import static android.opengl.GLES20.GL_COLOR_BUFFER_BIT;
-import static android.opengl.GLES20.GL_CULL_FACE;
-import static android.opengl.GLES20.GL_FLOAT;
-import static android.opengl.GLES20.GL_TRIANGLES;
-import static android.opengl.GLES20.glClear;
-import static android.opengl.GLES20.glClearColor;
-import static android.opengl.GLES20.glDrawArrays;
-import static android.opengl.GLES20.glEnable;
-import static android.opengl.GLES20.glEnableVertexAttribArray;
-import static android.opengl.GLES20.glGetAttribLocation;
-import static android.opengl.GLES20.glGetUniformLocation;
-import static android.opengl.GLES20.glUniform3fv;
-import static android.opengl.GLES20.glUniformMatrix4fv;
-import static android.opengl.GLES20.glUseProgram;
-import static android.opengl.GLES20.glVertexAttribPointer;
-import static android.opengl.GLES20.glViewport;
 import static android.opengl.GLES20.*;
 
-import static android.opengl.Matrix.multiplyMM;
 import static android.opengl.Matrix.perspectiveM;
-import static android.opengl.Matrix.setIdentityM;
 import static android.opengl.Matrix.setLookAtM;
-import static android.opengl.Matrix.translateM;
 
 public class MojRenderer implements GLSurfaceView.Renderer
 {
@@ -57,7 +38,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
     float stariX = 0.0f, stariY = 0.0f;
 
-    GLObject plane;
+    public static GLObject plane;
 
     int directionX = 1, directionY = -1, directionZ = 1;
     float speedX = 0.008f, speedY = 0.005f, speedZ = 0.003f;
@@ -76,14 +57,16 @@ public class MojRenderer implements GLSurfaceView.Renderer
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
 
-        plane = new GLObject(context, R.raw.f16_1_uv, GLCommon.LoadTexture(R.raw.torus_texture, context));
+        plane = new GLObject(context, R.raw.f16_1_uv, LoadTexture(R.raw.avion_texture, context));
 
-        GLCommon.InitShaders(context, R.raw.vertex_shader_phong, R.raw.fragment_shader_phong);
+        InitShaders(context, R.raw.vertex_shader_phong, R.raw.fragment_shader_phong);
+
+        SetEyePosition( 0, 1.2f, 0.5f ); // iza aviona, avion gleda prema -y
 
         //glDisable(GL_DITHER);
 
-        setLookAtM( GLCommon.viewMatrix, 0, GLCommon.eyePosition[0], GLCommon.eyePosition[1], GLCommon.eyePosition[2],
-                    GLCommon.center[0], GLCommon.center[1], GLCommon.center[2], 0.0f, 0.0f, 1.0f);
+        setLookAtM( viewMatrix, 0, eyePosition[0], eyePosition[1], eyePosition[2],
+                    center[0], center[1], center[2], up[0], up[1], up[2]);
     }
 
     @Override
@@ -104,7 +87,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
 //            orthoM(projectionMatrix, 0, -1f, 1f, -aspectRatio, aspectRatio, -1f, 1f);
 //        }
 
-        perspectiveM(GLCommon.projectionMatrix, 0, GLCommon.fov, (float) width / (float) height, GLCommon.nearZ, GLCommon.farZ);
+        perspectiveM(projectionMatrix, 0, fov, (float) width / (float) height, nearZ, farZ);
     }
 
     @Override
@@ -115,9 +98,13 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
         //Showcase();
 
-        plane.Draw();
+        SetUniformsShader();
 
-        // mozda glUniform za npr svjetlo tu staviti unaprijed samo jednom j
+        plane.Draw();
+        //plane.Rotate(0.5f, 0.0f, 1.0f, 0);
+        //plane.Translate(0.0001f, 0.0001f, 0.0001f);
+
+        // mozda glUniform za npr svjetlo tu staviti unaprijed samo jednom
         // jer se ne mijenja za svaki objekt
         // npr
         // nacrtaj scenu()
@@ -157,14 +144,14 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
     public void handleTouchDrag(float normalizedX, float normalizedY)
     {
-        if (normalizedX > stariX) GLCommon.eyePosition[0] += 10.0f * Math.abs(normalizedX - stariX);
-        else if (normalizedX < stariX) GLCommon.eyePosition[0] -= 10.0f * Math.abs(normalizedX - stariX);
+        if (normalizedX > stariX) eyePosition[0] += 10.0f * Math.abs(normalizedX - stariX);
+        else if (normalizedX < stariX) eyePosition[0] -= 10.0f * Math.abs(normalizedX - stariX);
 
-        if (normalizedY > stariY) GLCommon.eyePosition[2] += 10.0f * Math.abs(normalizedY - stariY);
-        else if (normalizedY < stariY) GLCommon.eyePosition[2] -= 10.0f * Math.abs(normalizedY - stariY);
+        if (normalizedY > stariY) eyePosition[2] += 10.0f * Math.abs(normalizedY - stariY);
+        else if (normalizedY < stariY) eyePosition[2] -= 10.0f * Math.abs(normalizedY - stariY);
 
-        setLookAtM( GLCommon.viewMatrix, 0, GLCommon.eyePosition[0], GLCommon.eyePosition[1], GLCommon.eyePosition[2], GLCommon.center[0], GLCommon.center[1], GLCommon.center[2], 0.0f, 0.0f, 1.0f);
-        glUniformMatrix4fv(GLCommon.viewMatrixLocation, 1, false, GLCommon.viewMatrix, 0);
+        setLookAtM( viewMatrix, 0, eyePosition[0], eyePosition[1], eyePosition[2], center[0], center[1], center[2], 0.0f, 0.0f, 1.0f);
+        glUniformMatrix4fv(viewMatrixLocation, 1, false, viewMatrix, 0);
 
         stariX = normalizedX;
         stariY = normalizedY;
@@ -172,25 +159,25 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
     public void Showcase()
     {
-        if ( GLCommon.eyePosition[0] < -1 )
+        if ( eyePosition[0] < -1 )
             directionX = 1;
-        else if ( GLCommon.eyePosition[0] > 1 )
+        else if ( eyePosition[0] > 1 )
             directionX = -1;
-        if ( GLCommon.eyePosition[1] < -1 )
+        if ( eyePosition[1] < -1 )
             directionY = 1;
-        else if ( GLCommon.eyePosition[1] > 1 )
+        else if ( eyePosition[1] > 1 )
             directionY = -1;
-        if ( GLCommon.eyePosition[2] < -1 )
+        if ( eyePosition[2] < -1 )
             directionZ = 1;
-        else if ( GLCommon.eyePosition[2] > 1 )
+        else if ( eyePosition[2] > 1 )
             directionZ = -1;
 
-        GLCommon.eyePosition[0] += directionX * speedX;
-        GLCommon.eyePosition[1] += directionY * speedY;
-        GLCommon.eyePosition[2] += directionZ * speedZ;
+        eyePosition[0] += directionX * speedX;
+        eyePosition[1] += directionY * speedY;
+        eyePosition[2] += directionZ * speedZ;
 
-        setLookAtM( GLCommon.viewMatrix, 0, GLCommon.eyePosition[0], GLCommon.eyePosition[1], GLCommon.eyePosition[2], GLCommon.center[0], GLCommon.center[1], GLCommon.center[2], 0.0f, 0.0f, 1.0f);
-        glUniformMatrix4fv(GLCommon.viewMatrixLocation, 1, false, GLCommon.viewMatrix, 0);
+        setLookAtM( viewMatrix, 0, eyePosition[0], eyePosition[1], eyePosition[2], center[0], center[1], center[2], 0.0f, 0.0f, 1.0f);
+        glUniformMatrix4fv(viewMatrixLocation, 1, false, viewMatrix, 0);
     }
 }
 

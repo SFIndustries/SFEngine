@@ -3,6 +3,7 @@ package com.example.luka.openglestest.engine;
 import android.content.Context;
 
 import com.example.luka.openglestest.util.TextResourceReader;
+import static com.example.luka.openglestest.engine.GLCommon.*;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -27,7 +28,7 @@ public class GLObject
 
     private float[] modelMatrix = new float[16];
     private float[] translationMatrix = new float[16];
-    private float[] rotationMatrix = new float[16];
+    public float[] rotationMatrix = new float[16];
     private float[] scaleMatrix = new float[16];
 
     public GLObject( Context context, int resourceId, int textureIDp )
@@ -71,19 +72,23 @@ public class GLObject
     public void Draw()
     {
         setIdentityM(modelMatrix, 0);
-        multiplyMM(modelMatrix, 0, modelMatrix, 0, translationMatrix, 0);
-        multiplyMM(modelMatrix, 0, modelMatrix, 0, rotationMatrix, 0);
-        multiplyMM(modelMatrix, 0, modelMatrix, 0, scaleMatrix, 0);
+        //multiplyMM(modelMatrix, 0, modelMatrix, 0, translationMatrix, 0);
+        //multiplyMM(modelMatrix, 0, modelMatrix, 0, rotationMatrix, 0);
+        //multiplyMM(modelMatrix, 0, modelMatrix, 0, scaleMatrix, 0);
 
-        multiplyMM(GLCommon.viewProjectionMatrix, 0, GLCommon.projectionMatrix, 0, GLCommon.viewMatrix, 0);
-        multiplyMM(GLCommon.modelViewProjectionMatrix, 0, GLCommon.viewProjectionMatrix, 0, modelMatrix, 0);
+        multiplyMM(modelMatrix, 0, scaleMatrix, 0, modelMatrix, 0); // 1. ili 3.?
+        multiplyMM(modelMatrix, 0, rotationMatrix, 0, modelMatrix, 0); // 2.
+        multiplyMM(modelMatrix, 0, translationMatrix, 0, modelMatrix, 0); // 1. ili 3.?
 
-        glUniformMatrix4fv(GLCommon.modelViewProjectionMatrixLocation, 1, false, GLCommon.modelViewProjectionMatrix, 0);
-        glUniformMatrix4fv(GLCommon.viewMatrixLocation, 1, false, GLCommon.viewMatrix, 0);
-        glUniformMatrix4fv(GLCommon.modelMatrixLocation, 1, false, modelMatrix, 0);
+        multiplyMM(viewProjectionMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
+        multiplyMM(modelViewProjectionMatrix, 0, viewProjectionMatrix, 0, modelMatrix, 0);
 
-        glUniform3f( GLCommon.eyePositionLocation, GLCommon.eyePosition[0], GLCommon.eyePosition[1], GLCommon.eyePosition[2] );
-        glUniform3f( GLCommon.lightPositionLocation, GLCommon.lightPosition[0], GLCommon.lightPosition[1], GLCommon.lightPosition[2] );
+        glUniformMatrix4fv(modelViewProjectionMatrixLocation, 1, false, modelViewProjectionMatrix, 0);
+        glUniformMatrix4fv(viewMatrixLocation, 1, false, viewMatrix, 0);
+        glUniformMatrix4fv(modelMatrixLocation, 1, false, modelMatrix, 0);
+
+//        glUniform3f( eyePositionLocation, eyePosition[0], eyePosition[1], eyePosition[2] );
+//        glUniform3f( lightPositionLocation, lightPosition[0], lightPosition[1], lightPosition[2] );
 
         glBindTexture(GL_TEXTURE_2D, textureID);
         glActiveTexture(GL_TEXTURE0);
@@ -115,9 +120,9 @@ public class GLObject
         rotateM( rotationMatrix, 0, angle, xAxis, yAxis, zAxis );
     }
 
-    public void Scale( float x, float y, float z )
-    {
-        scaleM( scaleMatrix, 0, x, y, z );
-    }
+//    public void Scale( float x, float y, float z )
+//    {
+//        scaleM( scaleMatrix, 0, x, y, z );
+//    }
 
 }

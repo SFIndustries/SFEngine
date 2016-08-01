@@ -152,7 +152,6 @@ public class TextResourceReader
         return lista;
         //return floatArray;
 
-
     }
 
 }

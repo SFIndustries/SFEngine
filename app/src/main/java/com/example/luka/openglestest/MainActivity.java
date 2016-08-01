@@ -8,6 +8,10 @@ import android.content.Context;
 import android.content.pm.ConfigurationInfo;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -20,11 +24,15 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import android.opengl.Matrix.*;
+
 import com.example.luka.openglestest.engine.MainMenu;
 import com.example.luka.openglestest.engine.MenuButton;
 import com.example.luka.openglestest.engine.MenuButtonStyle;
 
-public class MainActivity extends Activity {
+import static android.opengl.Matrix.multiplyMM;
+
+public class MainActivity extends Activity implements SensorEventListener {
 
     private GLSurfaceView glSurfaceView;
     private boolean rendererSet = false;
@@ -38,13 +46,23 @@ public class MainActivity extends Activity {
     LinearLayout llRoot;
     LinearLayout.LayoutParams llParams;
 
+    SensorManager mSensorManager;
+    Sensor accelerationSensor;
 
+    float dRoll, dPitch;
+    float dIgnoreThreshold = 5;
+    float alpha = 0.15f;
+
+    public float[] acceleration = new float[3], accelerationTm1 = new float[3];
 
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         //glSurfaceView = new GLSurfaceView(this);
+
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        accelerationSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
         r = getResources();
         dm = r.getDisplayMetrics();
@@ -54,13 +72,7 @@ public class MainActivity extends Activity {
 
         //createMainMenu();
 
-        try
-        {
-            glSurfaceView = (GLSurfaceView) findViewById(R.id.glSurfaceView);
-        } catch (Exception e)
-        {
-            e.printStackTrace();
-        }
+        glSurfaceView = (GLSurfaceView) findViewById(R.id.glSurfaceView);
 
         // Check if the system supports OpenGL ES 2.0.
         final ActivityManager activityManager =
@@ -86,7 +98,6 @@ public class MainActivity extends Activity {
 
             // Assign our renderer.
 
-
             try
             {
                 glSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
@@ -105,7 +116,6 @@ public class MainActivity extends Activity {
                     Toast.LENGTH_LONG).show();
             return;
         }
-
 
         glSurfaceView.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -150,7 +160,6 @@ public class MainActivity extends Activity {
                         });
                     }
 
-
                     return true;
                 } else return false;
             }
@@ -158,14 +167,70 @@ public class MainActivity extends Activity {
 
         });
 
-
         //setContentView(glSurfaceView);
+    }
+
+    @Override
+    public final void onAccuracyChanged(Sensor sensor, int accuracy)
+    {
+
+    }
+
+    @Override
+    public final void onSensorChanged(SensorEvent event)
+    {
+        if ( MojRenderer.plane == null )
+            return;
+
+        acceleration = event.values.clone();
+
+//        if ( Math.sqrt( Math.pow( acceleration[0] - accelerationTm1[0], 2 ) +
+//                        Math.pow( acceleration[1] - accelerationTm1[1], 2 ) +
+//                        Math.pow( acceleration[2] - accelerationTm1[2], 2 ) ) > 8.5f )
+//        {
+//            return;
+//        }
+
+//        if (        Math.abs(acceleration[0] - accelerationTm1[0]) > dIgnoreThreshold
+//                ||  Math.abs(acceleration[1] - accelerationTm1[1]) > dIgnoreThreshold )
+//        {
+//            return;
+//        }
+//
+        acceleration = exponentialSmoothing( acceleration, accelerationTm1, alpha );
+
+        dRoll = -acceleration[1] * 10;
+        dPitch = -acceleration[0] * 10;
+
+        float[] tempMatrix = new float[16];
+
+        android.opengl.Matrix.setIdentityM( tempMatrix, 0 );
+        android.opengl.Matrix.setIdentityM( MojRenderer.plane.rotationMatrix, 0 );
+        android.opengl.Matrix.setRotateM( tempMatrix, 0, dRoll, 0, 1.0f, 0 );
+        multiplyMM( MojRenderer.plane.rotationMatrix, 0, tempMatrix, 0, MojRenderer.plane.rotationMatrix, 0);
+        android.opengl.Matrix.setRotateM( tempMatrix, 0, dPitch, 1.0f, 0, 0 );
+        multiplyMM( MojRenderer.plane.rotationMatrix, 0, tempMatrix, 0, MojRenderer.plane.rotationMatrix, 0);
+
+        accelerationTm1 = acceleration;
+
+    }
+
+    private float[] exponentialSmoothing( float[] xt, float[] stm1, float alpha ) {
+        if ( stm1 == null )
+            return xt;
+        for ( int i=0; i<xt.length; i++ ) {
+            //stm1[i] = stm1[i] + alpha * (xt[i] - stm1[i]);
+            stm1[i] = alpha * xt[i] + (1 - alpha) * stm1[i];
+        }
+        return stm1;
     }
 
     @Override
     protected void onPause()
     {
         super.onPause();
+
+        mSensorManager.unregisterListener(this);
 
         if (rendererSet)
         {
@@ -177,6 +242,8 @@ public class MainActivity extends Activity {
     protected void onResume()
     {
         super.onResume();
+
+        mSensorManager.registerListener(this, accelerationSensor, SensorManager.SENSOR_DELAY_GAME);
 
         if (rendererSet)
         {

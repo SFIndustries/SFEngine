@@ -39,9 +39,12 @@ public class GLCommon
 
     public static float[] center = {0.0f, 0.0f, 0.0f};
 
+    public static float[] up = {0.0f, 0.0f, 1.0f};
+
     public static float fov = 45;
     public static float nearZ = 0.1f;
     public static float farZ = 10f;
+
 
 
     public static void InitShaders(Context context, int vertexShaderId, int fragmentShaderId)
@@ -102,4 +105,23 @@ public class GLCommon
         return textureHandle[0];
     }
 
+    public static void SetEyePosition (float x, float y, float z) //ociste
+    {
+        eyePosition[0] = x;
+        eyePosition[1] = y;
+        eyePosition[2] = z;
+    }
+
+    public static void SetCenter (float x, float y, float z) //glediste
+    {
+        center[0] = x;
+        center[1] = y;
+        center[2] = z;
+    }
+
+    public static void SetUniformsShader()
+    {
+        glUniform3f( eyePositionLocation, eyePosition[0], eyePosition[1], eyePosition[2] );
+        glUniform3f( lightPositionLocation, lightPosition[0], lightPosition[1], lightPosition[2] );
+    }
 }
