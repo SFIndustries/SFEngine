@@ -2,6 +2,7 @@ package com.example.luka.openglestest.engine;
 
 import android.content.Context;
 
+import com.example.luka.openglestest.MainActivity;
 import com.example.luka.openglestest.util.TextResourceReader;
 import static com.example.luka.openglestest.engine.GLCommon.*;
 
@@ -12,6 +13,9 @@ import java.util.List;
 
 import static android.opengl.GLES20.*;
 import static android.opengl.Matrix.*;
+
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by Luka on 1.8.2016..
@@ -30,6 +34,8 @@ public class GLObject
     private float[] translationMatrix = new float[16];
     public float[] rotationMatrix = new float[16];
     private float[] scaleMatrix = new float[16];
+
+
 
     public GLObject( Context context, int resourceId, int textureIDp )
     {
@@ -77,7 +83,11 @@ public class GLObject
         //multiplyMM(modelMatrix, 0, modelMatrix, 0, scaleMatrix, 0);
 
         multiplyMM(modelMatrix, 0, scaleMatrix, 0, modelMatrix, 0); // 1. ili 3.?
-        multiplyMM(modelMatrix, 0, rotationMatrix, 0, modelMatrix, 0); // 2.
+
+        synchronized(MainActivity.mutex) {
+            multiplyMM(modelMatrix, 0, rotationMatrix, 0, modelMatrix, 0); // 2.
+        }
+
         multiplyMM(modelMatrix, 0, translationMatrix, 0, modelMatrix, 0); // 1. ili 3.?
 
         multiplyMM(viewProjectionMatrix, 0, projectionMatrix, 0, viewMatrix, 0);

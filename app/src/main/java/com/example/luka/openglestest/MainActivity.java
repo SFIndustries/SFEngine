@@ -30,6 +30,9 @@ import com.example.luka.openglestest.engine.MainMenu;
 import com.example.luka.openglestest.engine.MenuButton;
 import com.example.luka.openglestest.engine.MenuButtonStyle;
 
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 import static android.opengl.Matrix.multiplyMM;
 
 public class MainActivity extends Activity implements SensorEventListener {
@@ -55,9 +58,12 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     public float[] acceleration = new float[3], accelerationTm1 = new float[3];
 
+    public static final Object mutex = new Object();
+
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
+
         super.onCreate(savedInstanceState);
         //glSurfaceView = new GLSurfaceView(this);
 
@@ -205,11 +211,14 @@ public class MainActivity extends Activity implements SensorEventListener {
         float[] tempMatrix = new float[16];
 
         android.opengl.Matrix.setIdentityM( tempMatrix, 0 );
-        android.opengl.Matrix.setIdentityM( MojRenderer.plane.rotationMatrix, 0 );
-        android.opengl.Matrix.setRotateM( tempMatrix, 0, dRoll, 0, 1.0f, 0 );
-        multiplyMM( MojRenderer.plane.rotationMatrix, 0, tempMatrix, 0, MojRenderer.plane.rotationMatrix, 0);
-        android.opengl.Matrix.setRotateM( tempMatrix, 0, dPitch, 1.0f, 0, 0 );
-        multiplyMM( MojRenderer.plane.rotationMatrix, 0, tempMatrix, 0, MojRenderer.plane.rotationMatrix, 0);
+
+        synchronized(mutex) {
+            android.opengl.Matrix.setIdentityM(MojRenderer.plane.rotationMatrix, 0);
+            android.opengl.Matrix.setRotateM(tempMatrix, 0, dRoll, 0, 1.0f, 0);
+            multiplyMM(MojRenderer.plane.rotationMatrix, 0, tempMatrix, 0, MojRenderer.plane.rotationMatrix, 0);
+            android.opengl.Matrix.setRotateM(tempMatrix, 0, dPitch, 1.0f, 0, 0);
+            multiplyMM(MojRenderer.plane.rotationMatrix, 0, tempMatrix, 0, MojRenderer.plane.rotationMatrix, 0);
+        }
 
         accelerationTm1 = acceleration;
 
@@ -243,7 +252,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     {
         super.onResume();
 
-        mSensorManager.registerListener(this, accelerationSensor, SensorManager.SENSOR_DELAY_GAME);
+        mSensorManager.registerListener(this, accelerationSensor, SensorManager.SENSOR_DELAY_FASTEST);
 
         if (rendererSet)
         {
