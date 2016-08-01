@@ -11,6 +11,8 @@ import android.graphics.PointF;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLUtils;
 
+import com.example.luka.openglestest.engine.GLCommon;
+import com.example.luka.openglestest.engine.GLObject;
 import com.example.luka.openglestest.util.TextResourceReader;
 
 import java.nio.ByteBuffer;
@@ -19,6 +21,7 @@ import java.nio.FloatBuffer;
 import java.util.List;
 
 import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.opengles.GL;
 import javax.microedition.khronos.opengles.GL10;
 
 import static android.opengl.GLES20.GL_COLOR_BUFFER_BIT;
@@ -51,9 +54,9 @@ public class MojRenderer implements GLSurfaceView.Renderer
     private static final int POSITION_COMPONENT_COUNT = 3;
     private static final int BYTES_PER_FLOAT = 4;
 
-    private final FloatBuffer vertexData;
-    private final FloatBuffer normalData;
-    private final FloatBuffer uvData;
+    //private final FloatBuffer vertexData;
+    //private final FloatBuffer normalData;
+    //private final FloatBuffer uvData;
 
     private final Context context;
 
@@ -106,109 +109,97 @@ public class MojRenderer implements GLSurfaceView.Renderer
     int textureID;
     int textureUniformLocation;
 
+    GLObject plane;
+
+    int directionX = 1, directionY = -1, directionZ = 1;
+    float speedX = 0.008f, speedY = 0.005f, speedZ = 0.003f;
+
     public MojRenderer(Context context) {
-
-
 
         this.context = context;
 
-        List lista;
-
-        lista =  TextResourceReader.UcitajObjektIzDatoteke(context, R.raw.f16_1_uv);
-        //lista =  TextResourceReader.UcitajObjektIzDatoteke(context, R.raw.kocka1);
-
-        vrhoviObjekta =  (float[]) lista.get(0);
-        normale = (float[]) lista.get(1);
-        uv = (float[]) lista.get(2);
-
-        //vrhoviObjekta = trokut;
-
-
-
-        vertexData = ByteBuffer
-                .allocateDirect(vrhoviObjekta.length * BYTES_PER_FLOAT)
-                .order(ByteOrder.nativeOrder())
-                .asFloatBuffer();
-        vertexData.put(vrhoviObjekta);
-
-
-        normalData = ByteBuffer
-                .allocateDirect(normale.length * BYTES_PER_FLOAT)
-                .order(ByteOrder.nativeOrder())
-                .asFloatBuffer();
-        normalData.put(normale);
-
-        uvData = ByteBuffer
-                .allocateDirect(uv.length * BYTES_PER_FLOAT)
-                .order(ByteOrder.nativeOrder())
-                .asFloatBuffer();
-        uvData.put(uv);
-
-
+//        List lista;
+//        lista =  TextResourceReader.LoadObjFromResource(context, R.raw.f16_1_uv);
+//        //lista =  TextResourceReader.LoadObjFromResource(context, R.raw.kocka1);
+//
+//        vrhoviObjekta =  (float[]) lista.get(0);
+//        normale = (float[]) lista.get(1);
+//        uv = (float[]) lista.get(2);
+//
+//        vertexData = ByteBuffer
+//                .allocateDirect(vrhoviObjekta.length * BYTES_PER_FLOAT)
+//                .order(ByteOrder.nativeOrder())
+//                .asFloatBuffer();
+//        vertexData.put(vrhoviObjekta);
+//
+//        normalData = ByteBuffer
+//                .allocateDirect(normale.length * BYTES_PER_FLOAT)
+//                .order(ByteOrder.nativeOrder())
+//                .asFloatBuffer();
+//        normalData.put(normale);
+//
+//        uvData = ByteBuffer
+//                .allocateDirect(uv.length * BYTES_PER_FLOAT)
+//                .order(ByteOrder.nativeOrder())
+//                .asFloatBuffer();
+//        uvData.put(uv);
     }
 
 
     @Override
     public void onSurfaceCreated(GL10 glUnused, EGLConfig config)
     {
-
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
         glEnable(GL_CULL_FACE);
-        //glCullFace(GL_BACK);
-        //glFrontFace(GL_CCW);
-
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
 
-        textureID = LoadTexture("torus_texture", context);
+        plane = new GLObject(context, R.raw.f16_1_uv, GLCommon.LoadTexture(R.raw.torus_texture, context));
+        GLCommon.InitShaders(context, R.raw.vertex_shader_phong, R.raw.fragment_shader_phong);
+
+        //textureID = LoadTexture("torus_texture", context);
 
         //String vertexShaderSource = TextResourceReader.readTextFileFromResource(context, R.raw.simple_vertex_shader);
         //String fragmentShaderSource = TextResourceReader.readTextFileFromResource(context, R.raw.simple_fragment_shader);
-        String vertexShaderSource = TextResourceReader.readTextFileFromResource(context, R.raw.vertex_shader_phong);
-        String fragmentShaderSource = TextResourceReader.readTextFileFromResource(context, R.raw.fragment_shader_phong);
+        //String vertexShaderSource = TextResourceReader.readTextFileFromResource(context, R.raw.vertex_shader_phong);
+        //String fragmentShaderSource = TextResourceReader.readTextFileFromResource(context, R.raw.fragment_shader_phong);
 
-        int vertexShader = ShaderHelper.compileVertexShader(vertexShaderSource);
-        int fragmentShader = ShaderHelper.compileFragmentShader(fragmentShaderSource);
-        program = ShaderHelper.linkProgram(vertexShader, fragmentShader);
+        //int vertexShader = ShaderHelper.compileVertexShader(vertexShaderSource);
+        //int fragmentShader = ShaderHelper.compileFragmentShader(fragmentShaderSource);
+        //program = ShaderHelper.linkProgram(vertexShader, fragmentShader);
 
-        glUseProgram(program);
+        //glUseProgram(program);
 
-        uColorLocation = glGetUniformLocation(program, U_COLOR);
-        aPositionLocation = glGetAttribLocation(program, A_POSITION);
-        aNormalLocation = glGetAttribLocation(program, A_NORMAL);
-        aTextureLocation = glGetAttribLocation(program, A_TEXTURE);
-
-
-//        izvorSvjetlostiLocation = glGetUniformLocation(program, "izvorSvjetlosti");
-//        glUniform3fv(izvorSvjetlostiLocation, 1, izvorSvjetlosti, 0);
-
-        vertexData.position(0);
-        glVertexAttribPointer(aPositionLocation, POSITION_COMPONENT_COUNT, GL_FLOAT, false, 0, vertexData);
-        glEnableVertexAttribArray(aPositionLocation);
-
-        normalData.position(0);
-        glVertexAttribPointer(aNormalLocation, POSITION_COMPONENT_COUNT, GL_FLOAT, false, 0, normalData);
-        glEnableVertexAttribArray(aNormalLocation);
-
-        uvData.position(0);
-        glVertexAttribPointer(aTextureLocation, 2, GL_FLOAT, false, 0, uvData);
-        glEnableVertexAttribArray(aTextureLocation);
-
-
-        uMatrixLocation = glGetUniformLocation(program, "MVP");
-        viewMatrixLocation = glGetUniformLocation(program, "V");
-        modelMatrixLocation = glGetUniformLocation(program, "M");
-
-        textureUniformLocation = glGetUniformLocation(program, "u_Texture");
-
-        lightPositionLocation = glGetUniformLocation(program, "LightPosition_worldspace");
-        eyePositionLocation = glGetUniformLocation(program, "ociste");
+//        uColorLocation = glGetUniformLocation(program, U_COLOR);
+//        aPositionLocation = glGetAttribLocation(program, A_POSITION);
+//        aNormalLocation = glGetAttribLocation(program, A_NORMAL);
+//        aTextureLocation = glGetAttribLocation(program, A_TEXTURE);
+//
+//        vertexData.position(0);
+//        glVertexAttribPointer(aPositionLocation, POSITION_COMPONENT_COUNT, GL_FLOAT, false, 0, vertexData);
+//        glEnableVertexAttribArray(aPositionLocation);
+//
+//        normalData.position(0);
+//        glVertexAttribPointer(aNormalLocation, POSITION_COMPONENT_COUNT, GL_FLOAT, false, 0, normalData);
+//        glEnableVertexAttribArray(aNormalLocation);
+//
+//        uvData.position(0);
+//        glVertexAttribPointer(aTextureLocation, 2, GL_FLOAT, false, 0, uvData);
+//        glEnableVertexAttribArray(aTextureLocation);
+//
+//        uMatrixLocation = glGetUniformLocation(program, "MVP");
+//        viewMatrixLocation = glGetUniformLocation(program, "V");
+//        modelMatrixLocation = glGetUniformLocation(program, "M");
+//        textureUniformLocation = glGetUniformLocation(program, "u_Texture");
+//        lightPositionLocation = glGetUniformLocation(program, "LightPosition_worldspace");
+//        eyePositionLocation = glGetUniformLocation(program, "ociste");
 
         polozaj = new PointF(0.0f, 0.0f);
         //glDisable(GL_DITHER);
 
-        setLookAtM(viewMatrix, 0, ocisteX, ocisteY, ocisteZ, gledisteX, gledisteY, gledisteZ, 0.0f, 0.0f, 1.0f);
+        setLookAtM( GLCommon.viewMatrix, 0, GLCommon.eyePosition[0], GLCommon.eyePosition[1], GLCommon.eyePosition[2],
+                    GLCommon.center[0], GLCommon.center[1], GLCommon.center[2], 0.0f, 0.0f, 1.0f);
 
     }
 
@@ -230,38 +221,41 @@ public class MojRenderer implements GLSurfaceView.Renderer
 //            orthoM(projectionMatrix, 0, -1f, 1f, -aspectRatio, aspectRatio, -1f, 1f);
 //        }
 
-        perspectiveM(projectionMatrix, 0, 45, (float) width / (float) height, /*0f*/0.1f, 10f);
-
-
-        setIdentityM(modelMatrix, 0);
+        perspectiveM(GLCommon.projectionMatrix, 0, 45, (float) width / (float) height, /*0f*/0.1f, 10f);
+        //setIdentityM(modelMatrix, 0);
 
     }
 
     @Override
     public void onDrawFrame(GL10 glUnused) {
+
+
         // Clear the rendering surface.
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        //glDisable(GL_CULL_FACE);
 
-        //setLookAtM(viewMatrix, 0, ocisteX, ocisteY, ocisteZ, gledisteX, gledisteY, gledisteZ, 0.0f, 0.0f, 1.0f);
+        Showcase();
 
-        multiplyMM(viewProjectionMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
-        multiplyMM(modelViewProjectionMatrix, 0, viewProjectionMatrix, 0, modelMatrix, 0);
-        glUniformMatrix4fv(uMatrixLocation, 1, false, modelViewProjectionMatrix, 0);
-        glUniformMatrix4fv(viewMatrixLocation, 1, false, viewMatrix, 0);
-        glUniformMatrix4fv(modelMatrixLocation, 1, false, modelMatrix, 0);
+        plane.Draw();
+        // mozda glUniform za npr svjetlo tu staviti unaprijed samo jednom j
+        // jer se ne mijenja za svaki objekt
 
-        glUniform3f( eyePositionLocation, ocisteX, ocisteY, ocisteZ );
-        glUniform3f( lightPositionLocation, lightPosition[0], lightPosition[1], lightPosition[2] );
 
-        //glEnable(GL_DEPTH_TEST);
-
-        glActiveTexture(GL_TEXTURE0);
-        // Set our "myTextureSampler" sampler to user Texture Unit 0
-        //glBindTexture(GL_TEXTURE_2D, textureID);
-        glUniform1i(textureUniformLocation, 0); // texture unit 0
-
-        glDrawArrays(GL_TRIANGLES, 0, vrhoviObjekta.length / POSITION_COMPONENT_COUNT);
+//        multiplyMM(viewProjectionMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
+//        multiplyMM(modelViewProjectionMatrix, 0, viewProjectionMatrix, 0, modelMatrix, 0);
+//
+//        glUniformMatrix4fv(uMatrixLocation, 1, false, modelViewProjectionMatrix, 0);
+//        glUniformMatrix4fv(viewMatrixLocation, 1, false, viewMatrix, 0);
+//        glUniformMatrix4fv(modelMatrixLocation, 1, false, modelMatrix, 0);
+//
+//        glUniform3f( eyePositionLocation, ocisteX, ocisteY, ocisteZ );
+//        glUniform3f( lightPositionLocation, lightPosition[0], lightPosition[1], lightPosition[2] );
+//
+//        glActiveTexture(GL_TEXTURE0);
+//        // Set our "myTextureSampler" sampler to user Texture Unit 0
+//        //glBindTexture(GL_TEXTURE_2D, textureID);
+//        glUniform1i(textureUniformLocation, 0); // texture unit 0
+//
+//        glDrawArrays(GL_TRIANGLES, 0, vrhoviObjekta.length / POSITION_COMPONENT_COUNT);
 
     }
 
@@ -274,14 +268,14 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
     public void handleTouchDrag(float normalizedX, float normalizedY)
     {
-        if (normalizedX > stariX) ocisteX += 10.0f * Math.abs(normalizedX - stariX);
-        else if (normalizedX < stariX) ocisteX -= 10.0f * Math.abs(normalizedX - stariX);
+        if (normalizedX > stariX) GLCommon.eyePosition[0] += 10.0f * Math.abs(normalizedX - stariX);
+        else if (normalizedX < stariX) GLCommon.eyePosition[0] -= 10.0f * Math.abs(normalizedX - stariX);
 
-        if (normalizedY > stariY) ocisteZ += 10.0f * Math.abs(normalizedY - stariY);
-        else if (normalizedY < stariY) ocisteZ -= 10.0f * Math.abs(normalizedY - stariY);
+        if (normalizedY > stariY) GLCommon.eyePosition[2] += 10.0f * Math.abs(normalizedY - stariY);
+        else if (normalizedY < stariY) GLCommon.eyePosition[2] -= 10.0f * Math.abs(normalizedY - stariY);
 
-        setLookAtM(viewMatrix, 0, ocisteX, ocisteY, ocisteZ, gledisteX, gledisteY, gledisteZ, 0.0f, 0.0f, 1.0f);
-        glUniformMatrix4fv(viewMatrixLocation, 1, false, viewMatrix, 0);
+        setLookAtM( GLCommon.viewMatrix, 0, GLCommon.eyePosition[0], GLCommon.eyePosition[1], GLCommon.eyePosition[2], GLCommon.center[0], GLCommon.center[1], GLCommon.center[2], 0.0f, 0.0f, 1.0f);
+        glUniformMatrix4fv(GLCommon.viewMatrixLocation, 1, false, GLCommon.viewMatrix, 0);
 
         //glUniform1f(ocisteXLocation, ocisteX);
 
@@ -305,7 +299,6 @@ public class MojRenderer implements GLSurfaceView.Renderer
         final Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), resID, options);
 
         // Bind to the texture in OpenGL
-
         glBindTexture(GL_TEXTURE_2D, textureHandle[0]);
 
         // Set filtering
@@ -320,8 +313,29 @@ public class MojRenderer implements GLSurfaceView.Renderer
         bitmap.recycle();
 
         return textureHandle[0];
+    }
 
+    public void Showcase()
+    {
+        if ( GLCommon.eyePosition[0] < -1 )
+            directionX = 1;
+        else if ( GLCommon.eyePosition[0] > 1 )
+            directionX = -1;
+        if ( GLCommon.eyePosition[1] < -1 )
+            directionY = 1;
+        else if ( GLCommon.eyePosition[1] > 1 )
+            directionY = -1;
+        if ( GLCommon.eyePosition[2] < -1 )
+            directionZ = 1;
+        else if ( GLCommon.eyePosition[2] > 1 )
+            directionZ = -1;
 
+        GLCommon.eyePosition[0] += directionX * speedX;
+        GLCommon.eyePosition[1] += directionY * speedY;
+        GLCommon.eyePosition[2] += directionZ * speedZ;
+
+        setLookAtM( GLCommon.viewMatrix, 0, GLCommon.eyePosition[0], GLCommon.eyePosition[1], GLCommon.eyePosition[2], GLCommon.center[0], GLCommon.center[1], GLCommon.center[2], 0.0f, 0.0f, 1.0f);
+        glUniformMatrix4fv(GLCommon.viewMatrixLocation, 1, false, GLCommon.viewMatrix, 0);
     }
 }
 

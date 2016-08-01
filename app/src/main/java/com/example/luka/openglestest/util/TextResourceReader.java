@@ -38,7 +38,7 @@ public class TextResourceReader
         return body.toString();
     }
 
-    public static List UcitajObjektIzDatoteke(Context context, int resourceId)
+    public static List LoadObjFromResource(Context context, int resourceId)
 
     {
         Vector vrhovi = new Vector();
