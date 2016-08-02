@@ -5,30 +5,24 @@ package com.example.luka.openglestest;
  */
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
-import android.graphics.PointF;
 import android.opengl.GLSurfaceView;
-import android.opengl.GLUtils;
 
 import static com.example.luka.openglestest.engine.GLCommon.*;
-import com.example.luka.openglestest.engine.GLObject;
-import com.example.luka.openglestest.util.TextResourceReader;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
+import com.example.luka.openglestest.engine.Controls;
+import com.example.luka.openglestest.engine.GLObject;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL;
 import javax.microedition.khronos.opengles.GL10;
 
 import static android.opengl.GLES20.*;
 
 import static android.opengl.Matrix.perspectiveM;
 import static android.opengl.Matrix.setLookAtM;
+import static com.example.luka.openglestest.engine.GLCommon.SetEyePosition;
 
 public class MojRenderer implements GLSurfaceView.Renderer
 {
@@ -38,7 +32,8 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
     float stariX = 0.0f, stariY = 0.0f;
 
-    public static GLObject plane;
+    public static GLObject plane, sphere, grid;
+    public static List<GLObject> spheres = new ArrayList<>();
 
     int directionX = 1, directionY = -1, directionZ = 1;
     float speedX = 0.008f, speedY = 0.005f, speedZ = 0.003f;
@@ -57,7 +52,29 @@ public class MojRenderer implements GLSurfaceView.Renderer
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
 
-        plane = new GLObject(context, R.raw.f16_1_uv, LoadTexture(R.raw.avion_texture, context));
+        grid = new GLObject(context, R.raw.grid, LoadTexture(R.raw.checkers, context));
+
+        plane = new GLObject(context, R.raw.f16_1_uv, LoadTexture(R.raw.torus_texture, context));
+        plane.SetInitOrientation( new float[]{ -plane.yAxis[0], -plane.yAxis[1], -plane.yAxis[2], 1} );
+        plane.velocity = 0.02f;
+        plane.Translate(0,0,1);
+        Controls.SetControlledObject( plane );
+
+        sphere = new GLObject(context, R.raw.sfera, plane.textureID);
+        sphere.Translate(1.0f, -3.0f, 0);
+//        spheres.add(sphere);
+//        sphere = new GLObject(context, R.raw.sfera, plane.textureID);
+//        sphere.Translate(0, -5.0f, 0);
+//        spheres.add(sphere);
+//        sphere = new GLObject(context, R.raw.sfera, plane.textureID);
+//        sphere.Translate(-1.0f, -7.0f, 0);
+//        spheres.add(sphere);
+//        sphere = new GLObject(context, R.raw.sfera, plane.textureID);
+//        sphere.Translate(0, -9.0f, 1.0f);
+//        spheres.add(sphere);
+//        sphere = new GLObject(context, R.raw.sfera, plane.textureID);
+//        sphere.Translate(0, -11.0f, 0);
+//        spheres.add(sphere);
 
         InitShaders(context, R.raw.vertex_shader_phong, R.raw.fragment_shader_phong);
 
@@ -100,7 +117,23 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
         SetUniformsShader();
 
+        plane.UpdatePosition();
+        SetEyePosition( plane.position[0], plane.position[1] + 1.2f, plane.position[2] + 1.5f );
+        //SetCenter( eyePosition[0] + plane.orientation[0], eyePosition[1] + plane.orientation[1], eyePosition[2] + plane.orientation[2] );
+        SetCenter( plane.position[0], plane.position[1], plane.position[2] );
+
+        setLookAtM( viewMatrix, 0, eyePosition[0], eyePosition[1], eyePosition[2],
+                center[0], center[1], center[2], up[0], up[1], up[2]);
+
+        grid.Draw();
         plane.Draw();
+        for(GLObject object: spheres)
+        {
+            object.Draw();
+        }
+
+        //sphere.Draw();
+
         //plane.Rotate(0.5f, 0.0f, 1.0f, 0);
         //plane.Translate(0.0001f, 0.0001f, 0.0001f);
 

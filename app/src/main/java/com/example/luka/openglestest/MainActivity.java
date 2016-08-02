@@ -21,11 +21,12 @@ import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import android.opengl.Matrix.*;
 
+import com.example.luka.openglestest.engine.Controls;
 import com.example.luka.openglestest.engine.MainMenu;
 import com.example.luka.openglestest.engine.MenuButton;
 import com.example.luka.openglestest.engine.MenuButtonStyle;
@@ -34,12 +35,15 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static android.opengl.Matrix.multiplyMM;
+import static android.opengl.Matrix.multiplyMV;
 
 public class MainActivity extends Activity implements SensorEventListener {
 
     private GLSurfaceView glSurfaceView;
     private boolean rendererSet = false;
     float stariX, stariY;
+
+    Button buttonReset;
 
     Resources r;
     DisplayMetrics dm;
@@ -51,12 +55,6 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     SensorManager mSensorManager;
     Sensor accelerationSensor;
-
-    float dRoll, dPitch;
-    float dIgnoreThreshold = 5;
-    float alpha = 0.15f;
-
-    public float[] acceleration = new float[3], accelerationTm1 = new float[3];
 
     public static final Object mutex = new Object();
 
@@ -79,6 +77,14 @@ public class MainActivity extends Activity implements SensorEventListener {
         //createMainMenu();
 
         glSurfaceView = (GLSurfaceView) findViewById(R.id.glSurfaceView);
+        buttonReset = (Button) findViewById(R.id.buttonReset);
+
+        buttonReset.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Controls.accelerationInitBool = true;
+            }
+        });
 
         // Check if the system supports OpenGL ES 2.0.
         final ActivityManager activityManager =
@@ -123,55 +129,55 @@ public class MainActivity extends Activity implements SensorEventListener {
             return;
         }
 
-        glSurfaceView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event != null) {
-
-                    final float aspectRatio = v.getWidth() > v.getHeight() ?
-                            (float) v.getWidth() / (float) v.getHeight() :
-                            (float) v.getHeight() / (float) v.getWidth();
-
-                    final float normalizedX;
-                    final float normalizedY;
-
-                    if (v.getWidth() > v.getHeight())
-                    {
-                        normalizedX = (event.getX() / (float) v.getWidth()) * 2 * aspectRatio - aspectRatio;
-                        normalizedY = -((event.getY() / (float) v.getHeight()) * 2 - 1);
-                    } else
-                    {
-                        normalizedX = (event.getX() / (float) v.getWidth()) * 2 - 1;
-                        normalizedY = -((event.getY() / (float) v.getHeight()) * 2 * aspectRatio - aspectRatio);
-                    }
-
-
-                    if (event.getAction() == MotionEvent.ACTION_DOWN)
-                    {
-                        glSurfaceView.queueEvent(new Runnable() {
-                            @Override
-                            public void run() {
-                                mojRenderer.handleTouchPress(normalizedX, normalizedY);
-                            }
-                        });
-                    } else if (event.getAction() == MotionEvent.ACTION_MOVE)
-                    {
-                        glSurfaceView.queueEvent(new Runnable() {
-                            @Override
-                            public void run() {
-                                mojRenderer.handleTouchDrag(normalizedX, normalizedY);
-                            }
-
-
-                        });
-                    }
-
-                    return true;
-                } else return false;
-            }
-
-
-        });
+//        glSurfaceView.setOnTouchListener(new View.OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View v, MotionEvent event) {
+//                if (event != null) {
+//
+//                    final float aspectRatio = v.getWidth() > v.getHeight() ?
+//                            (float) v.getWidth() / (float) v.getHeight() :
+//                            (float) v.getHeight() / (float) v.getWidth();
+//
+//                    final float normalizedX;
+//                    final float normalizedY;
+//
+//                    if (v.getWidth() > v.getHeight())
+//                    {
+//                        normalizedX = (event.getX() / (float) v.getWidth()) * 2 * aspectRatio - aspectRatio;
+//                        normalizedY = -((event.getY() / (float) v.getHeight()) * 2 - 1);
+//                    } else
+//                    {
+//                        normalizedX = (event.getX() / (float) v.getWidth()) * 2 - 1;
+//                        normalizedY = -((event.getY() / (float) v.getHeight()) * 2 * aspectRatio - aspectRatio);
+//                    }
+//
+//
+//                    if (event.getAction() == MotionEvent.ACTION_DOWN)
+//                    {
+//                        glSurfaceView.queueEvent(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                mojRenderer.handleTouchPress(normalizedX, normalizedY);
+//                            }
+//                        });
+//                    } else if (event.getAction() == MotionEvent.ACTION_MOVE)
+//                    {
+//                        glSurfaceView.queueEvent(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                mojRenderer.handleTouchDrag(normalizedX, normalizedY);
+//                            }
+//
+//
+//                        });
+//                    }
+//
+//                    return true;
+//                } else return false;
+//            }
+//
+//
+//        });
 
         //setContentView(glSurfaceView);
     }
@@ -185,53 +191,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     @Override
     public final void onSensorChanged(SensorEvent event)
     {
-        if ( MojRenderer.plane == null )
-            return;
-
-        acceleration = event.values.clone();
-
-//        if ( Math.sqrt( Math.pow( acceleration[0] - accelerationTm1[0], 2 ) +
-//                        Math.pow( acceleration[1] - accelerationTm1[1], 2 ) +
-//                        Math.pow( acceleration[2] - accelerationTm1[2], 2 ) ) > 8.5f )
-//        {
-//            return;
-//        }
-
-//        if (        Math.abs(acceleration[0] - accelerationTm1[0]) > dIgnoreThreshold
-//                ||  Math.abs(acceleration[1] - accelerationTm1[1]) > dIgnoreThreshold )
-//        {
-//            return;
-//        }
-//
-        acceleration = exponentialSmoothing( acceleration, accelerationTm1, alpha );
-
-        dRoll = -acceleration[1] * 10;
-        dPitch = -acceleration[0] * 10;
-
-        float[] tempMatrix = new float[16];
-
-        android.opengl.Matrix.setIdentityM( tempMatrix, 0 );
-
-        synchronized(mutex) {
-            android.opengl.Matrix.setIdentityM(MojRenderer.plane.rotationMatrix, 0);
-            android.opengl.Matrix.setRotateM(tempMatrix, 0, dRoll, 0, 1.0f, 0);
-            multiplyMM(MojRenderer.plane.rotationMatrix, 0, tempMatrix, 0, MojRenderer.plane.rotationMatrix, 0);
-            android.opengl.Matrix.setRotateM(tempMatrix, 0, dPitch, 1.0f, 0, 0);
-            multiplyMM(MojRenderer.plane.rotationMatrix, 0, tempMatrix, 0, MojRenderer.plane.rotationMatrix, 0);
-        }
-
-        accelerationTm1 = acceleration;
-
-    }
-
-    private float[] exponentialSmoothing( float[] xt, float[] stm1, float alpha ) {
-        if ( stm1 == null )
-            return xt;
-        for ( int i=0; i<xt.length; i++ ) {
-            //stm1[i] = stm1[i] + alpha * (xt[i] - stm1[i]);
-            stm1[i] = alpha * xt[i] + (1 - alpha) * stm1[i];
-        }
-        return stm1;
+        Controls.SetOrientationFromAcceleration( event.values.clone() );
     }
 
     @Override
@@ -252,7 +212,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     {
         super.onResume();
 
-        mSensorManager.registerListener(this, accelerationSensor, SensorManager.SENSOR_DELAY_FASTEST);
+        mSensorManager.registerListener(this, accelerationSensor, SensorManager.SENSOR_DELAY_GAME);
 
         if (rendererSet)
         {

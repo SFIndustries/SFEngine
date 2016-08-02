@@ -27,15 +27,18 @@ public class GLObject
 
     private static final int BYTES_PER_FLOAT = 4;
 
-
-    int textureID;
+    public int textureID;
 
     private float[] modelMatrix = new float[16];
     private float[] translationMatrix = new float[16];
     public float[] rotationMatrix = new float[16];
     private float[] scaleMatrix = new float[16];
 
+    public float[] xAxis = {1.0f, 0, 0, 1}, yAxis = {0, 1.0f, 0, 1}, zAxis = {0, 0, 1.0f, 1};
+    public float[] orientation = new float[4], initOrientation = new float[4];
 
+    public float[] position = {0, 0, 0, 1}, initPosition = {0, 0, 0, 1};
+    public float velocity;
 
     public GLObject( Context context, int resourceId, int textureIDp )
     {
@@ -83,11 +86,10 @@ public class GLObject
         //multiplyMM(modelMatrix, 0, modelMatrix, 0, scaleMatrix, 0);
 
         multiplyMM(modelMatrix, 0, scaleMatrix, 0, modelMatrix, 0); // 1. ili 3.?
-
-        synchronized(MainActivity.mutex) {
+        synchronized(Controls.mutex)
+        {
             multiplyMM(modelMatrix, 0, rotationMatrix, 0, modelMatrix, 0); // 2.
         }
-
         multiplyMM(modelMatrix, 0, translationMatrix, 0, modelMatrix, 0); // 1. ili 3.?
 
         multiplyMM(viewProjectionMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
@@ -117,12 +119,14 @@ public class GLObject
     public void Translate( float x, float y, float z )
     {
         translateM(translationMatrix, 0, x, y, z );
+        multiplyMV(position, 0, translationMatrix, 0, initPosition, 0);
     }
 
     public void TranslateTo( float x, float y, float z )
     {
         setIdentityM(translationMatrix, 0);
         translateM(translationMatrix, 0, x, y, z );
+        multiplyMV(position, 0, translationMatrix, 0, initPosition, 0);
     }
 
     public void Rotate( float angle, float xAxis, float yAxis, float zAxis )
@@ -134,5 +138,16 @@ public class GLObject
 //    {
 //        scaleM( scaleMatrix, 0, x, y, z );
 //    }
+
+    public void SetInitOrientation(float[] vector )
+    {
+        initOrientation = vector.clone();
+    }
+
+    public void UpdatePosition()
+    {
+        Translate( velocity * orientation[0], velocity * orientation[1], velocity * orientation[2] );
+
+    }
 
 }

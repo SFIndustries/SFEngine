@@ -16,12 +16,12 @@ void main()
     vec3 LightSourceDiffuseIntensity = vec3(1.0, 1.0, 1.0);
     vec3 LightSourceSpecularIntensity = vec3(1.0, 1.0, 1.0);
 
-    float alpha = 1.0;
+    float alpha = 5.0;
     float LightPower = 1.5;
-    float lightDamping = 2.0;
+    float lightAmbientDamping = 2.0;
     float lightParallelSurface = 0.2;
     float zeroThreshold = 0.01;
-    float lightDistanceDamping = 2.0;
+    float lightDistanceDamping = 0.5;
 
     //vec3 MaterialDiffuseColor = vec3(0.7, 0.7, 0.7);
     vec3 MaterialDiffuseColor = texture2D( u_Texture, v_TexCoordinate ).rgb;
@@ -46,9 +46,9 @@ void main()
     if ( cosine > 1.0 )
         cosine = 1.0;
     else if ( cosine < 0.0 )
-        cosine = -cosine / lightDamping;
-    else if ( abs( cosine ) < zeroThreshold ) // (cosine == 0)
-        cosine = lightParallelSurface;
+        cosine = -cosine / lightAmbientDamping;
+//    else if ( abs( cosine ) < zeroThreshold ) // (cosine == 0)
+//        cosine = lightParallelSurface;
 
     vec3 Diffuse = MaterialDiffuseColor * LightSourceDiffuseIntensity * cosine;
 

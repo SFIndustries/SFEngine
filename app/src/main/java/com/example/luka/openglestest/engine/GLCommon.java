@@ -43,8 +43,7 @@ public class GLCommon
 
     public static float fov = 45;
     public static float nearZ = 0.1f;
-    public static float farZ = 10f;
-
+    public static float farZ = 50f;
 
 
     public static void InitShaders(Context context, int vertexShaderId, int fragmentShaderId)
