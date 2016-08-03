@@ -17,17 +17,11 @@ import static android.opengl.Matrix.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-/**
- * Created by Luka on 1.8.2016..
- */
-public class GLObject
+public class GLObject extends GLObjectData
 {
-    float[] vertices, normals, UVs;
     FloatBuffer vertexBuffer, normalBuffer, UVbuffer;
 
-    private static final int BYTES_PER_FLOAT = 4;
-
-    public int textureID;
+    static final int BYTES_PER_FLOAT = 4;
 
     private float[] modelMatrix = new float[16];
     private float[] translationMatrix = new float[16];
@@ -42,11 +36,26 @@ public class GLObject
 
     public GLObject( Context context, int resourceId, int textureIDp )
     {
-        List tempList = TextResourceReader.LoadObjFromResource( context, resourceId );
-        vertices =  (float[]) tempList.get(0);
-        normals = (float[]) tempList.get(1);
-        UVs = (float[]) tempList.get(2);
+        super( context, resourceId, textureIDp );
 
+        InitBuffers();
+        InitMatrices();
+    }
+
+    public GLObject( GLObjectData object )
+    {
+        vertices = object.vertices.clone();
+        normals = object.normals.clone();
+        UVs = object.UVs.clone();
+
+        textureID = object.textureID;
+
+        InitBuffers();
+        InitMatrices();
+    }
+
+    public void InitBuffers()
+    {
         vertexBuffer = ByteBuffer
                 .allocateDirect(vertices.length * BYTES_PER_FLOAT)
                 .order(ByteOrder.nativeOrder())
@@ -64,9 +73,10 @@ public class GLObject
                 .order(ByteOrder.nativeOrder())
                 .asFloatBuffer();
         UVbuffer.put(UVs);
+    }
 
-        textureID = textureIDp;
-
+    public void InitMatrices()
+    {
         setIdentityM(translationMatrix, 0);
         setIdentityM(rotationMatrix, 0);
         setIdentityM(scaleMatrix, 0);

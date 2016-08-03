@@ -8,6 +8,9 @@ import android.opengl.GLUtils;
 import com.example.luka.openglestest.ShaderHelper;
 import com.example.luka.openglestest.util.TextResourceReader;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static android.opengl.GLES20.*;
 
 /**
@@ -43,8 +46,9 @@ public class GLCommon
 
     public static float fov = 45;
     public static float nearZ = 0.1f;
-    public static float farZ = 50f;
+    public static float farZ = 100;
 
+    public static List<Integer> textureIDList = new ArrayList<>();
 
     public static void InitShaders(Context context, int vertexShaderId, int fragmentShaderId)
     {
@@ -101,7 +105,10 @@ public class GLCommon
         // Recycle the bitmap, since its data has been loaded into OpenGL.
         bitmap.recycle();
 
+        textureIDList.add( textureHandle[0] );
+
         return textureHandle[0];
+
     }
 
     public static void SetEyePosition (float x, float y, float z) //ociste

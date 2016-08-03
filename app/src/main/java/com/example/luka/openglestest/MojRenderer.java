@@ -11,6 +11,7 @@ import static com.example.luka.openglestest.engine.GLCommon.*;
 
 import com.example.luka.openglestest.engine.Controls;
 import com.example.luka.openglestest.engine.GLObject;
+import com.example.luka.openglestest.engine.GLObjectData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +33,8 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
     float stariX = 0.0f, stariY = 0.0f;
 
+    public GLObjectData sphereData, planeData, gridData;
+    int waterTexture, blueTexture, torusTexture, spaceTexture;
     public static GLObject plane, sphere, grid;
     public static List<GLObject> spheres = new ArrayList<>();
 
@@ -52,29 +55,41 @@ public class MojRenderer implements GLSurfaceView.Renderer
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
 
-        grid = new GLObject(context, R.raw.grid, LoadTexture(R.raw.checkers, context));
 
-        plane = new GLObject(context, R.raw.f16_1_uv, LoadTexture(R.raw.torus_texture, context));
+        waterTexture = LoadTexture(R.raw.voda, context);
+        blueTexture = LoadTexture(R.raw.wall, context);
+        torusTexture = LoadTexture(R.raw.torus_texture, context);
+        spaceTexture = LoadTexture(R.raw.space_hd, context);
+
+        grid = new GLObject( context, R.raw.grid, LoadTexture(R.raw.checkers, context) );
+
+        plane = new GLObject( context, R.raw.f16_1_uv, LoadTexture(R.raw.avion_texture, context) );
         plane.SetInitOrientation( new float[]{ -plane.yAxis[0], -plane.yAxis[1], -plane.yAxis[2], 1} );
-        plane.velocity = 0.02f;
+        plane.velocity = 0.03f;
         plane.Translate(0,0,1);
         Controls.SetControlledObject( plane );
 
-        sphere = new GLObject(context, R.raw.sfera, plane.textureID);
+        sphereData = new GLObjectData( context, R.raw.sfera, plane.textureID );
+
+        sphere = new GLObject( sphereData );
+        sphere.SetTexture( torusTexture );
         sphere.Translate(1.0f, -3.0f, 0);
-//        spheres.add(sphere);
-//        sphere = new GLObject(context, R.raw.sfera, plane.textureID);
-//        sphere.Translate(0, -5.0f, 0);
-//        spheres.add(sphere);
-//        sphere = new GLObject(context, R.raw.sfera, plane.textureID);
-//        sphere.Translate(-1.0f, -7.0f, 0);
-//        spheres.add(sphere);
-//        sphere = new GLObject(context, R.raw.sfera, plane.textureID);
-//        sphere.Translate(0, -9.0f, 1.0f);
-//        spheres.add(sphere);
-//        sphere = new GLObject(context, R.raw.sfera, plane.textureID);
-//        sphere.Translate(0, -11.0f, 0);
-//        spheres.add(sphere);
+        spheres.add(sphere);
+        sphere = new GLObject( sphereData );
+        sphere.SetTexture( waterTexture );
+        sphere.Translate(0, -5.0f, 0);
+        spheres.add(sphere);
+        sphere = new GLObject( sphereData );
+        sphere.SetTexture( blueTexture );
+        sphere.Translate(-2.0f, -7.0f, 0);
+        spheres.add(sphere);
+        sphere = new GLObject( context, R.raw.sfera_unutra, plane.textureID );
+        sphere.SetTexture( spaceTexture );
+        sphere.Rotate(90, 0, 0, 1);
+        //sphere.Translate(0, -9.0f, 3.0f);
+        spheres.add(sphere);
+
+
 
         InitShaders(context, R.raw.vertex_shader_phong, R.raw.fragment_shader_phong);
 
@@ -124,6 +139,8 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
         setLookAtM( viewMatrix, 0, eyePosition[0], eyePosition[1], eyePosition[2],
                 center[0], center[1], center[2], up[0], up[1], up[2]);
+
+        // pomakni sferu na mjesto aviona
 
         grid.Draw();
         plane.Draw();

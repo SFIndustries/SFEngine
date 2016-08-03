@@ -11,9 +11,9 @@ import static android.opengl.Matrix.multiplyMV;
 public class Controls
 {
     static float dRoll, dPitch;
-    static float rollSensitivity = 30;
-    static float pitchSensitivity = 30;
-    static float alpha = 0.05f, rollAlpha, pitchAlpha;
+    static float rollSensitivity = 40;
+    static float pitchSensitivity = 40;
+    static float alpha = 0.03f, rollAlpha, pitchAlpha;
 
     static public float[] acceleration = new float[3], accelerationTm1 = new float[3], acceleratonInit = new float[3];
     static public boolean accelerationInitBool = true;
@@ -58,9 +58,8 @@ public class Controls
             android.opengl.Matrix.setRotateM(
                     tempMatrix, 0, dRoll, controlledObject.yAxis[0], controlledObject.yAxis[1], controlledObject.yAxis[2]);
             multiplyMM(controlledObject.rotationMatrix, 0, tempMatrix, 0, controlledObject.rotationMatrix, 0);
-
             multiplyMV(tempVector, 0, tempMatrix, 0, controlledObject.xAxis, 0);
-            //android.opengl.Matrix.setRotateM(tempMatrix, 0, dPitch, 1.0f, 0, 0);
+
             android.opengl.Matrix.setRotateM(tempMatrix, 0, dPitch, tempVector[0], tempVector[1], tempVector[2]);
             multiplyMM(controlledObject.rotationMatrix, 0, tempMatrix, 0, controlledObject.rotationMatrix, 0);
 

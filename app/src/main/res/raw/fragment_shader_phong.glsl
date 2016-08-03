@@ -21,7 +21,7 @@ void main()
     float lightAmbientDamping = 2.0;
     float lightParallelSurface = 0.2;
     float zeroThreshold = 0.01;
-    float lightDistanceDamping = 0.5;
+    float lightDistanceDamping = 0.0;
 
     //vec3 MaterialDiffuseColor = vec3(0.7, 0.7, 0.7);
     vec3 MaterialDiffuseColor = texture2D( u_Texture, v_TexCoordinate ).rgb;
