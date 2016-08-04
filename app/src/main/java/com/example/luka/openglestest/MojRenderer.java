@@ -61,7 +61,8 @@ public class MojRenderer implements GLSurfaceView.Renderer
         waterTexture = LoadTexture(R.raw.voda, context);
         blueTexture = LoadTexture(R.raw.wall, context);
         torusTexture = LoadTexture(R.raw.torus_texture, context);
-        spaceTexture = LoadTexture(R.raw.space_hd, context);
+        //spaceTexture = LoadTexture(R.raw.space_hd, context);
+        spaceTexture = LoadTexture(R.raw.space_sphere_texture, context);
 
         grid = new GLObject( context, R.raw.grid, LoadTexture(R.raw.checkers, context) );
 
@@ -146,7 +147,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
         // pomakni sferu na mjesto aviona
 
-        grid.Draw();
+        //grid.Draw();
         plane.Draw();
 //        for(GLObject object: spheres)
 //        {
