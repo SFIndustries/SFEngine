@@ -28,7 +28,8 @@ public class GLObject extends GLObjectData
     public float[] rotationMatrix = new float[16];
     private float[] scaleMatrix = new float[16];
 
-    public float[] xAxis = {1.0f, 0, 0, 1}, yAxis = {0, 1.0f, 0, 1}, zAxis = {0, 0, 1.0f, 1};
+    public float[]  xAxis = {1.0f, 0, 0, 1}, yAxis = {0, 1.0f, 0, 1}, zAxis = {0, 0, 1.0f, 1},
+                    xAxisInit = {1.0f, 0, 0, 1}, yAxisInit = {0, 1.0f, 0, 1}, zAxisInit = {0, 0, 1.0f, 1} ;
     public float[] orientation = new float[4], initOrientation = new float[4];
 
     public float[] position = {0, 0, 0, 1}, initPosition = {0, 0, 0, 1};

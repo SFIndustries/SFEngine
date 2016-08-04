@@ -83,6 +83,7 @@ public class MainActivity extends Activity implements SensorEventListener {
             @Override
             public void onClick(View v) {
                 Controls.accelerationInitBool = true;
+
             }
         });
 

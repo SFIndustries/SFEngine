@@ -7,6 +7,8 @@ package com.example.luka.openglestest;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 
+import static android.opengl.Matrix.multiplyMV;
+import static android.opengl.Matrix.rotateM;
 import static com.example.luka.openglestest.engine.GLCommon.*;
 
 import com.example.luka.openglestest.engine.Controls;
@@ -65,24 +67,24 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
         plane = new GLObject( context, R.raw.f16_1_uv, LoadTexture(R.raw.avion_texture, context) );
         plane.SetInitOrientation( new float[]{ -plane.yAxis[0], -plane.yAxis[1], -plane.yAxis[2], 1} );
-        plane.velocity = 0.03f;
+        plane.velocity = 0.015f;
         plane.Translate(0,0,1);
         Controls.SetControlledObject( plane );
 
         sphereData = new GLObjectData( context, R.raw.sfera, plane.textureID );
 
-        sphere = new GLObject( sphereData );
-        sphere.SetTexture( torusTexture );
-        sphere.Translate(1.0f, -3.0f, 0);
-        spheres.add(sphere);
-        sphere = new GLObject( sphereData );
-        sphere.SetTexture( waterTexture );
-        sphere.Translate(0, -5.0f, 0);
-        spheres.add(sphere);
-        sphere = new GLObject( sphereData );
-        sphere.SetTexture( blueTexture );
-        sphere.Translate(-2.0f, -7.0f, 0);
-        spheres.add(sphere);
+//        sphere = new GLObject( sphereData );
+//        sphere.SetTexture( torusTexture );
+//        sphere.Translate(1.0f, -3.0f, 0);
+//        spheres.add(sphere);
+//        sphere = new GLObject( sphereData );
+//        sphere.SetTexture( waterTexture );
+//        sphere.Translate(0, -5.0f, 0);
+//        spheres.add(sphere);
+//        sphere = new GLObject( sphereData );
+//        sphere.SetTexture( blueTexture );
+//        sphere.Translate(-2.0f, -7.0f, 0);
+//        spheres.add(sphere);
 
         spaceSphere = new GLObject( context, R.raw.sfera_unutra, spaceTexture );
         spaceSphere.Rotate(90, 0, 0, 1);
@@ -90,7 +92,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
         programPhongTexture = InitProgram(context, R.raw.vertex_shader_phong, R.raw.fragment_shader_phong);
         programTexture = InitProgram(context, R.raw.vertex_shader_texture, R.raw.fragment_shader_texture);
 
-        SetEyePosition( 0, 1.2f, 0.5f ); // iza aviona, avion gleda prema -y
+        //SetEyePosition( 0, 1.2f, 0.5f ); // iza aviona, avion gleda prema -y
 
         //glDisable(GL_DITHER);
 
@@ -127,28 +129,29 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
         //Showcase();
 
-        UseProgram( programPhongTexture );
+        UseProgram( programTexture );
         SetUniformsShader();
 
         synchronized (Controls.mutex) {
+
             plane.UpdatePosition();
             //SetEyePosition( plane.position[0], plane.position[1] + 1.2f, plane.position[2] + 1.5f );
-            SetEyePosition(plane.position[0] - plane.orientation[0], plane.position[1] - plane.orientation[1], plane.position[2] - plane.orientation[2]);
-            //SetCenter( eyePosition[0] + plane.orientation[0], eyePosition[1] + plane.orientation[1], eyePosition[2] + plane.orientation[2] );
+            SetEyePosition(plane.position[0] - plane.orientation[0]/* + plane.zAxis[0]*/, plane.position[1] - plane.orientation[1]/* + plane.zAxis[1]*/, plane.position[2] - plane.orientation[2]/* + plane.zAxis[2]*/);
+            //SetCenter( plane.position[0] , plane.position[1] , plane.position[2]  );
             SetCenter(plane.position[0] + plane.orientation[0], plane.position[1] + plane.orientation[1], plane.position[2] + plane.orientation[2]);
         }
 
         setLookAtM( viewMatrix, 0, eyePosition[0], eyePosition[1], eyePosition[2],
-                center[0], center[1], center[2], up[0], up[1], up[2]);
+                center[0], center[1], center[2], /*up[0], up[1], up[2]*/plane.zAxis[0], plane.zAxis[1], plane.zAxis[2]);
 
         // pomakni sferu na mjesto aviona
 
         grid.Draw();
         plane.Draw();
-        for(GLObject object: spheres)
-        {
-            object.Draw();
-        }
+//        for(GLObject object: spheres)
+//        {
+//            object.Draw();
+//        }
 
         UseProgram( programTexture );
 
