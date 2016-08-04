@@ -18,7 +18,8 @@ import static android.opengl.GLES20.*;
  */
 public class GLCommon
 {
-    public static int program;
+    public static int program, programPhongTexture, programTexture;
+    public static List<Integer> programList = new ArrayList<>();
 
     public static float[] modelMatrix = new float[16];
     public static int modelMatrixLocation;
@@ -50,21 +51,28 @@ public class GLCommon
 
     public static List<Integer> textureIDList = new ArrayList<>();
 
-    public static void InitShaders(Context context, int vertexShaderId, int fragmentShaderId)
+    public static int InitProgram(Context context, int vertexShaderId, int fragmentShaderId)
     {
         String vertexShaderSource = TextResourceReader.readTextFileFromResource(context, vertexShaderId);
         String fragmentShaderSource = TextResourceReader.readTextFileFromResource(context, fragmentShaderId);
 
         int vertexShader = ShaderHelper.compileVertexShader(vertexShaderSource);
         int fragmentShader = ShaderHelper.compileFragmentShader(fragmentShaderSource);
-        program = ShaderHelper.linkProgram(vertexShader, fragmentShader);
+        int program = ShaderHelper.linkProgram(vertexShader, fragmentShader);
+        programList.add(program);
 
-        glUseProgram(program);
+        return program;
+    }
+
+    public static void UseProgram( int programP )
+    {
+        program = programP;
+
+        glUseProgram( program );
 
         aPositionLocation = glGetAttribLocation(program, "a_Position");
         aNormalLocation = glGetAttribLocation(program, "a_Normal");
         aTextureLocation = glGetAttribLocation(program, "a_Texture");
-        textureUniformLocation = glGetUniformLocation(program, "u_Texture");
 
         viewMatrixLocation = glGetUniformLocation(program, "V");
         modelMatrixLocation = glGetUniformLocation(program, "M");
@@ -77,6 +85,7 @@ public class GLCommon
         glEnableVertexAttribArray(GLCommon.aNormalLocation);
         glEnableVertexAttribArray(GLCommon.aTextureLocation);
     }
+
 
     public static int LoadTexture(int resourceName, Context context)
     {

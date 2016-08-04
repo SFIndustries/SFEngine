@@ -35,7 +35,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
     public GLObjectData sphereData, planeData, gridData;
     int waterTexture, blueTexture, torusTexture, spaceTexture;
-    public static GLObject plane, sphere, grid;
+    public static GLObject plane, sphere, grid, spaceSphere;
     public static List<GLObject> spheres = new ArrayList<>();
 
     int directionX = 1, directionY = -1, directionZ = 1;
@@ -83,15 +83,12 @@ public class MojRenderer implements GLSurfaceView.Renderer
         sphere.SetTexture( blueTexture );
         sphere.Translate(-2.0f, -7.0f, 0);
         spheres.add(sphere);
-        sphere = new GLObject( context, R.raw.sfera_unutra, plane.textureID );
-        sphere.SetTexture( spaceTexture );
-        sphere.Rotate(90, 0, 0, 1);
-        //sphere.Translate(0, -9.0f, 3.0f);
-        spheres.add(sphere);
 
+        spaceSphere = new GLObject( context, R.raw.sfera_unutra, spaceTexture );
+        spaceSphere.Rotate(90, 0, 0, 1);
 
-
-        InitShaders(context, R.raw.vertex_shader_phong, R.raw.fragment_shader_phong);
+        programPhongTexture = InitProgram(context, R.raw.vertex_shader_phong, R.raw.fragment_shader_phong);
+        programTexture = InitProgram(context, R.raw.vertex_shader_texture, R.raw.fragment_shader_texture);
 
         SetEyePosition( 0, 1.2f, 0.5f ); // iza aviona, avion gleda prema -y
 
@@ -130,12 +127,16 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
         //Showcase();
 
+        UseProgram( programPhongTexture );
         SetUniformsShader();
 
-        plane.UpdatePosition();
-        SetEyePosition( plane.position[0], plane.position[1] + 1.2f, plane.position[2] + 1.5f );
-        //SetCenter( eyePosition[0] + plane.orientation[0], eyePosition[1] + plane.orientation[1], eyePosition[2] + plane.orientation[2] );
-        SetCenter( plane.position[0], plane.position[1], plane.position[2] );
+        synchronized (Controls.mutex) {
+            plane.UpdatePosition();
+            //SetEyePosition( plane.position[0], plane.position[1] + 1.2f, plane.position[2] + 1.5f );
+            SetEyePosition(plane.position[0] - plane.orientation[0], plane.position[1] - plane.orientation[1], plane.position[2] - plane.orientation[2]);
+            //SetCenter( eyePosition[0] + plane.orientation[0], eyePosition[1] + plane.orientation[1], eyePosition[2] + plane.orientation[2] );
+            SetCenter(plane.position[0] + plane.orientation[0], plane.position[1] + plane.orientation[1], plane.position[2] + plane.orientation[2]);
+        }
 
         setLookAtM( viewMatrix, 0, eyePosition[0], eyePosition[1], eyePosition[2],
                 center[0], center[1], center[2], up[0], up[1], up[2]);
@@ -148,6 +149,11 @@ public class MojRenderer implements GLSurfaceView.Renderer
         {
             object.Draw();
         }
+
+        UseProgram( programTexture );
+
+        spaceSphere.TranslateTo( plane.position[0], plane.position[1], plane.position[2] );
+        spaceSphere.Draw();
 
         //sphere.Draw();
 

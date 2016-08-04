@@ -99,8 +99,8 @@ public class GLObject extends GLObjectData
         synchronized(Controls.mutex)
         {
             multiplyMM(modelMatrix, 0, rotationMatrix, 0, modelMatrix, 0); // 2.
+            multiplyMM(modelMatrix, 0, translationMatrix, 0, modelMatrix, 0); // 1. ili 3.?
         }
-        multiplyMM(modelMatrix, 0, translationMatrix, 0, modelMatrix, 0); // 1. ili 3.?
 
         multiplyMM(viewProjectionMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
         multiplyMM(modelViewProjectionMatrix, 0, viewProjectionMatrix, 0, modelMatrix, 0);
@@ -128,20 +128,26 @@ public class GLObject extends GLObjectData
 
     public void Translate( float x, float y, float z )
     {
-        translateM(translationMatrix, 0, x, y, z );
-        multiplyMV(position, 0, translationMatrix, 0, initPosition, 0);
+        synchronized(Controls.mutex) {
+            translateM(translationMatrix, 0, x, y, z);
+            multiplyMV(position, 0, translationMatrix, 0, initPosition, 0);
+        }
     }
 
     public void TranslateTo( float x, float y, float z )
     {
-        setIdentityM(translationMatrix, 0);
-        translateM(translationMatrix, 0, x, y, z );
-        multiplyMV(position, 0, translationMatrix, 0, initPosition, 0);
+        synchronized(Controls.mutex) {
+            setIdentityM(translationMatrix, 0);
+            translateM(translationMatrix, 0, x, y, z);
+            multiplyMV(position, 0, translationMatrix, 0, initPosition, 0);
+        }
     }
 
     public void Rotate( float angle, float xAxis, float yAxis, float zAxis )
     {
-        rotateM( rotationMatrix, 0, angle, xAxis, yAxis, zAxis );
+        synchronized(Controls.mutex) {
+            rotateM(rotationMatrix, 0, angle, xAxis, yAxis, zAxis);
+        }
     }
 
 //    public void Scale( float x, float y, float z )
