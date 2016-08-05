@@ -18,8 +18,6 @@ import android.os.Bundle;
 import android.opengl.GLSurfaceView;
 
 import android.util.DisplayMetrics;
-import android.view.Gravity;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -30,12 +28,6 @@ import com.example.luka.openglestest.engine.Controls;
 import com.example.luka.openglestest.engine.MainMenu;
 import com.example.luka.openglestest.engine.MenuButton;
 import com.example.luka.openglestest.engine.MenuButtonStyle;
-
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
-import static android.opengl.Matrix.multiplyMM;
-import static android.opengl.Matrix.multiplyMV;
 
 public class MainActivity extends Activity implements SensorEventListener {
 
@@ -192,7 +184,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     @Override
     public final void onSensorChanged(SensorEvent event)
     {
-        Controls.SetOrientationFromAcceleration( event.values.clone() );
+        Controls.GetOrientationFromAcceleration( event.values.clone() );
     }
 
     @Override

@@ -33,7 +33,7 @@ public class Controls
         controlledObject = object;
     }
 
-    public static void SetOrientationFromAcceleration( float[] acceleration )
+    public static void GetOrientationFromAcceleration(float[] acceleration )
     {
 
         if ( accelerationInitBool )
@@ -56,27 +56,25 @@ public class Controls
 
         //setIdentityM( tempMatrix, 0 );
 
-        synchronized(mutex)
+        //synchronized(mutex)
         {
-
-
-            // roll - orijentacija aviona je orijentacija uredaja
-            android.opengl.Matrix.setRotateM(
-                    tempMatrix, 0, dRoll, controlledObject.yAxis[0], controlledObject.yAxis[1], controlledObject.yAxis[2]);
-            multiplyMM(controlledObject.rotationMatrix, 0, tempMatrix, 0, controlledObject.rotationMatrix, 0);
-            multiplyMV(tempVector, 0, tempMatrix, 0, controlledObject.xAxis, 0);
-
-            // pitch - orijentacija uredaja daje promjenu orijentacije aviona
-
-            android.opengl.Matrix.setRotateM(tempMatrix, 0, dPitch, tempVector[0], tempVector[1], tempVector[2]);
-            multiplyMM(controlledObject.rotationMatrix, 0, tempMatrix, 0, controlledObject.rotationMatrix, 0);
-
-            tempVector = controlledObject.initOrientation.clone();
-            multiplyMV(controlledObject.orientation, 0, controlledObject.rotationMatrix, 0, tempVector, 0);
-
-            multiplyMV(controlledObject.xAxis, 0, controlledObject.rotationMatrix, 0, controlledObject.xAxisInit, 0);
-            multiplyMV(controlledObject.yAxis, 0, controlledObject.rotationMatrix, 0, controlledObject.yAxisInit, 0);
-            multiplyMV(controlledObject.zAxis, 0, controlledObject.rotationMatrix, 0, controlledObject.zAxisInit, 0);
+//            // roll - orijentacija uredaja daje promjenu orijentacije aviona
+//            android.opengl.Matrix.setRotateM(
+//                    tempMatrix, 0, dRoll, controlledObject.yAxis[0], controlledObject.yAxis[1], controlledObject.yAxis[2]);
+//            multiplyMM(controlledObject.rotationMatrix, 0, tempMatrix, 0, controlledObject.rotationMatrix, 0);
+//            multiplyMV(tempVector, 0, tempMatrix, 0, controlledObject.xAxis, 0);
+//
+//            // pitch - orijentacija uredaja daje promjenu orijentacije aviona
+//
+//            android.opengl.Matrix.setRotateM(tempMatrix, 0, dPitch, tempVector[0], tempVector[1], tempVector[2]);
+//            multiplyMM(controlledObject.rotationMatrix, 0, tempMatrix, 0, controlledObject.rotationMatrix, 0);
+//
+//            tempVector = controlledObject.initOrientation.clone();
+//            multiplyMV(controlledObject.orientation, 0, controlledObject.rotationMatrix, 0, tempVector, 0);
+//
+//            multiplyMV(controlledObject.xAxis, 0, controlledObject.rotationMatrix, 0, controlledObject.xAxisInit, 0);
+//            multiplyMV(controlledObject.yAxis, 0, controlledObject.rotationMatrix, 0, controlledObject.yAxisInit, 0);
+//            multiplyMV(controlledObject.zAxis, 0, controlledObject.rotationMatrix, 0, controlledObject.zAxisInit, 0);
 
         }
 
@@ -84,7 +82,28 @@ public class Controls
 
     }
 
-    private static float[] ExponentialSmoothing( float[] xt, float[] stm1, float alpha )
+    public static void SetOrientation(  )
+    {
+        android.opengl.Matrix.setRotateM(
+                tempMatrix, 0, Controls.dRoll, controlledObject.yAxis[0], controlledObject.yAxis[1], controlledObject.yAxis[2]);
+        multiplyMM(controlledObject.rotationMatrix, 0, tempMatrix, 0, controlledObject.rotationMatrix, 0);
+        multiplyMV(tempVector, 0, tempMatrix, 0, controlledObject.xAxis, 0);
+
+        // pitch - orijentacija uredaja daje promjenu orijentacije aviona
+
+        android.opengl.Matrix.setRotateM(tempMatrix, 0, Controls.dPitch, tempVector[0], tempVector[1], tempVector[2]);
+        multiplyMM(controlledObject.rotationMatrix, 0, tempMatrix, 0, controlledObject.rotationMatrix, 0);
+
+        tempVector = controlledObject.initOrientation.clone();
+        multiplyMV(controlledObject.orientation, 0, controlledObject.rotationMatrix, 0, tempVector, 0);
+
+        multiplyMV(controlledObject.xAxis, 0, controlledObject.rotationMatrix, 0, controlledObject.xAxisInit, 0);
+        multiplyMV(controlledObject.yAxis, 0, controlledObject.rotationMatrix, 0, controlledObject.yAxisInit, 0);
+        multiplyMV(controlledObject.zAxis, 0, controlledObject.rotationMatrix, 0, controlledObject.zAxisInit, 0);
+
+    }
+
+    public static float[] ExponentialSmoothing( float[] xt, float[] stm1, float alpha )
     {
         if ( stm1 == null )
             return xt;

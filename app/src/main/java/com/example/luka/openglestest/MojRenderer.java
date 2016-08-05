@@ -7,6 +7,7 @@ package com.example.luka.openglestest;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 
+import static android.opengl.Matrix.multiplyMM;
 import static android.opengl.Matrix.multiplyMV;
 import static android.opengl.Matrix.rotateM;
 import static com.example.luka.openglestest.engine.GLCommon.*;
@@ -17,6 +18,7 @@ import com.example.luka.openglestest.engine.GLObjectData;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -43,14 +45,19 @@ public class MojRenderer implements GLSurfaceView.Renderer
     int directionX = 1, directionY = -1, directionZ = 1;
     float speedX = 0.008f, speedY = 0.005f, speedZ = 0.003f;
 
+    float[] eyePositionTemp = new float[4], upTm1 = new float[4];
+
+    static float[] tempMatrix = new float[16], pitchMatrix = new float[16];
+    static float[] tempVector = new float[4];
+    float[] tempOrientation = new float[4], tempZAxis = new float[4];
+
     public MojRenderer(Context context)
     {
         this.context = context;
     }
 
     @Override
-    public void onSurfaceCreated(GL10 glUnused, EGLConfig config)
-    {
+    public void onSurfaceCreated(GL10 glUnused, EGLConfig config) {
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
         glEnable(GL_CULL_FACE);
@@ -64,15 +71,26 @@ public class MojRenderer implements GLSurfaceView.Renderer
         //spaceTexture = LoadTexture(R.raw.space_hd, context);
         spaceTexture = LoadTexture(R.raw.space_sphere_texture, context);
 
-        grid = new GLObject( context, R.raw.grid, LoadTexture(R.raw.checkers, context) );
+        grid = new GLObject(context, R.raw.grid, LoadTexture(R.raw.checkers, context));
 
-        plane = new GLObject( context, R.raw.f16_1_uv, LoadTexture(R.raw.avion_texture, context) );
-        plane.SetInitOrientation( new float[]{ -plane.yAxis[0], -plane.yAxis[1], -plane.yAxis[2], 1} );
-        plane.velocity = 0.015f;
-        plane.Translate(0,0,1);
-        Controls.SetControlledObject( plane );
+        plane = new GLObject(context, R.raw.f16_1_uv, LoadTexture(R.raw.avion_texture, context));
+        plane.SetInitOrientation(new float[]{-plane.yAxis[0], -plane.yAxis[1], -plane.yAxis[2], 1});
+        plane.velocity = 0.1f;
+        plane.Translate(0, 0, 1);
+        Controls.SetControlledObject(plane);
 
-        sphereData = new GLObjectData( context, R.raw.sfera, plane.textureID );
+        sphereData = new GLObjectData(context, R.raw.sfera, waterTexture);
+
+//        Random rand = new Random();
+//        for (int i = 0; i < 500; i++)
+//        {
+//            sphere = new GLObject( sphereData );
+//            sphere.TranslateTo( rand.nextInt((100 - (-100)) + 1) - 100,
+//                                rand.nextInt((100 - (-100)) + 1) - 100,
+//                                rand.nextInt((100 - (-100)) + 1) - 100);
+//            spheres.add(sphere);
+//        }
+
 
 //        sphere = new GLObject( sphereData );
 //        sphere.SetTexture( torusTexture );
@@ -93,12 +111,14 @@ public class MojRenderer implements GLSurfaceView.Renderer
         programPhongTexture = InitProgram(context, R.raw.vertex_shader_phong, R.raw.fragment_shader_phong);
         programTexture = InitProgram(context, R.raw.vertex_shader_texture, R.raw.fragment_shader_texture);
 
-        //SetEyePosition( 0, 1.2f, 0.5f ); // iza aviona, avion gleda prema -y
+        SetEyePosition( 0, 1.2f, 0.5f ); // iza aviona, avion gleda prema -y
 
         //glDisable(GL_DITHER);
 
         setLookAtM( viewMatrix, 0, eyePosition[0], eyePosition[1], eyePosition[2],
                     center[0], center[1], center[2], up[0], up[1], up[2]);
+
+        UseProgram(programTexture);
     }
 
     @Override
@@ -130,31 +150,45 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
         //Showcase();
 
-        UseProgram( programTexture );
-        SetUniformsShader();
+        //UseProgram( programTexture );
+        //SetUniformsShader();
 
-        synchronized (Controls.mutex) {
+        plane.UpdatePosition();
 
-            plane.UpdatePosition();
-            //SetEyePosition( plane.position[0], plane.position[1] + 1.2f, plane.position[2] + 1.5f );
-            SetEyePosition(plane.position[0] - plane.orientation[0]/* + plane.zAxis[0]*/, plane.position[1] - plane.orientation[1]/* + plane.zAxis[1]*/, plane.position[2] - plane.orientation[2]/* + plane.zAxis[2]*/);
-            //SetCenter( plane.position[0] , plane.position[1] , plane.position[2]  );
-            SetCenter(plane.position[0] + plane.orientation[0], plane.position[1] + plane.orientation[1], plane.position[2] + plane.orientation[2]);
-        }
+        Controls.SetOrientation();
 
-        setLookAtM( viewMatrix, 0, eyePosition[0], eyePosition[1], eyePosition[2],
-                center[0], center[1], center[2], /*up[0], up[1], up[2]*/plane.zAxis[0], plane.zAxis[1], plane.zAxis[2]);
+        eyePositionTemp[0] = plane.position[0] - plane.orientation[0] * 0.0f + plane.zAxis[0] / 2.0f;
+        eyePositionTemp[1] = plane.position[1] - plane.orientation[1] * 0.0f + plane.zAxis[1] / 2.0f;
+        eyePositionTemp[2] = plane.position[2] - plane.orientation[2] * 0.0f + plane.zAxis[2] / 2.0f;
+
+        up = plane.zAxis.clone();
+        up = Controls.ExponentialSmoothing(up, upTm1, 0.05f);
+        upTm1 = up.clone();
+
+        eyePositionTemp = Controls.ExponentialSmoothing(eyePositionTemp, eyePositionTm1, 0.05f);
+
+        //SetEyePosition( plane.position[0], plane.position[1] + 1.2f, plane.position[2] + 1.5f );
+        SetEyePosition(eyePositionTemp[0], eyePositionTemp[1], eyePositionTemp[2]);
+        eyePositionTm1 = eyePosition.clone();
+        //SetCenter( plane.position[0] , plane.position[1] , plane.position[2]  );
+        SetCenter(plane.position[0] + plane.orientation[0] / 2.0f, plane.position[1] + plane.orientation[1] / 2.0f, plane.position[2] + plane.orientation[2] / 2.0f);
+
+        setLookAtM(viewMatrix, 0, eyePosition[0], eyePosition[1], eyePosition[2],
+                center[0], center[1], center[2], up[0], up[1], up[2]/*plane.zAxis[0], plane.zAxis[1], plane.zAxis[2]*/);
+
+
+        plane.Draw();
 
         // pomakni sferu na mjesto aviona
 
         //grid.Draw();
-        plane.Draw();
+
 //        for(GLObject object: spheres)
 //        {
 //            object.Draw();
 //        }
 
-        UseProgram( programTexture );
+        //UseProgram( programTexture );
 
         spaceSphere.TranslateTo( plane.position[0], plane.position[1], plane.position[2] );
         spaceSphere.Draw();
@@ -177,23 +211,6 @@ public class MojRenderer implements GLSurfaceView.Renderer
         //
         // }
 
-
-//        multiplyMM(viewProjectionMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
-//        multiplyMM(modelViewProjectionMatrix, 0, viewProjectionMatrix, 0, modelMatrix, 0);
-//
-//        glUniformMatrix4fv(uMatrixLocation, 1, false, modelViewProjectionMatrix, 0);
-//        glUniformMatrix4fv(viewMatrixLocation, 1, false, viewMatrix, 0);
-//        glUniformMatrix4fv(modelMatrixLocation, 1, false, modelMatrix, 0);
-//
-//        glUniform3f( eyePositionLocation, ocisteX, ocisteY, ocisteZ );
-//        glUniform3f( lightPositionLocation, lightPosition[0], lightPosition[1], lightPosition[2] );
-//
-//        glActiveTexture(GL_TEXTURE0);
-//        // Set our "myTextureSampler" sampler to user Texture Unit 0
-//        //glBindTexture(GL_TEXTURE_2D, textureID);
-//        glUniform1i(textureUniformLocation, 0); // texture unit 0
-//
-//        glDrawArrays(GL_TRIANGLES, 0, vrhoviObjekta.length / POSITION_COMPONENT_COUNT);
     }
 
     public void handleTouchPress(float normalizedX, float normalizedY)

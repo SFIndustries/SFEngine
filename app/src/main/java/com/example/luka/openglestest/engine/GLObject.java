@@ -91,24 +91,26 @@ public class GLObject extends GLObjectData
 
     public void Draw()
     {
-        setIdentityM(modelMatrix, 0);
+
         //multiplyMM(modelMatrix, 0, modelMatrix, 0, translationMatrix, 0);
         //multiplyMM(modelMatrix, 0, modelMatrix, 0, rotationMatrix, 0);
         //multiplyMM(modelMatrix, 0, modelMatrix, 0, scaleMatrix, 0);
 
-        multiplyMM(modelMatrix, 0, scaleMatrix, 0, modelMatrix, 0); // 1. ili 3.?
-        synchronized(Controls.mutex)
+
+        //synchronized(Controls.mutex)
         {
+            setIdentityM(modelMatrix, 0);
+            multiplyMM(modelMatrix, 0, scaleMatrix, 0, modelMatrix, 0); // 1. ili 3.?
             multiplyMM(modelMatrix, 0, rotationMatrix, 0, modelMatrix, 0); // 2.
             multiplyMM(modelMatrix, 0, translationMatrix, 0, modelMatrix, 0); // 1. ili 3.?
+
+            multiplyMM(viewProjectionMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
+            multiplyMM(modelViewProjectionMatrix, 0, viewProjectionMatrix, 0, modelMatrix, 0);
+
+            glUniformMatrix4fv(modelViewProjectionMatrixLocation, 1, false, modelViewProjectionMatrix, 0);
+            glUniformMatrix4fv(viewMatrixLocation, 1, false, viewMatrix, 0);
+            glUniformMatrix4fv(modelMatrixLocation, 1, false, modelMatrix, 0);
         }
-
-        multiplyMM(viewProjectionMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
-        multiplyMM(modelViewProjectionMatrix, 0, viewProjectionMatrix, 0, modelMatrix, 0);
-
-        glUniformMatrix4fv(modelViewProjectionMatrixLocation, 1, false, modelViewProjectionMatrix, 0);
-        glUniformMatrix4fv(viewMatrixLocation, 1, false, viewMatrix, 0);
-        glUniformMatrix4fv(modelMatrixLocation, 1, false, modelMatrix, 0);
 
 //        glUniform3f( eyePositionLocation, eyePosition[0], eyePosition[1], eyePosition[2] );
 //        glUniform3f( lightPositionLocation, lightPosition[0], lightPosition[1], lightPosition[2] );
@@ -129,7 +131,8 @@ public class GLObject extends GLObjectData
 
     public void Translate( float x, float y, float z )
     {
-        synchronized(Controls.mutex) {
+        //synchronized(Controls.mutex)
+        {
             translateM(translationMatrix, 0, x, y, z);
             multiplyMV(position, 0, translationMatrix, 0, initPosition, 0);
         }
@@ -137,7 +140,8 @@ public class GLObject extends GLObjectData
 
     public void TranslateTo( float x, float y, float z )
     {
-        synchronized(Controls.mutex) {
+        //synchronized(Controls.mutex)
+        {
             setIdentityM(translationMatrix, 0);
             translateM(translationMatrix, 0, x, y, z);
             multiplyMV(position, 0, translationMatrix, 0, initPosition, 0);
@@ -146,7 +150,8 @@ public class GLObject extends GLObjectData
 
     public void Rotate( float angle, float xAxis, float yAxis, float zAxis )
     {
-        synchronized(Controls.mutex) {
+        //synchronized(Controls.mutex)
+        {
             rotateM(rotationMatrix, 0, angle, xAxis, yAxis, zAxis);
         }
     }
