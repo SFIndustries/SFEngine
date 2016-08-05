@@ -5,6 +5,7 @@ package com.example.luka.openglestest;
  */
 
 import android.content.Context;
+import android.graphics.Camera;
 import android.opengl.GLSurfaceView;
 
 import static android.opengl.Matrix.multiplyMM;
@@ -13,8 +14,10 @@ import static android.opengl.Matrix.rotateM;
 import static com.example.luka.openglestest.engine.GLCommon.*;
 
 import com.example.luka.openglestest.engine.Controls;
+import com.example.luka.openglestest.engine.GLCamera;
 import com.example.luka.openglestest.engine.GLObject;
 import com.example.luka.openglestest.engine.GLObjectData;
+import com.example.luka.openglestest.engine.TrackCamera;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,6 +68,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
         glDepthFunc(GL_LEQUAL);
 
 
+
         waterTexture = LoadTexture(R.raw.voda, context);
         blueTexture = LoadTexture(R.raw.wall, context);
         torusTexture = LoadTexture(R.raw.torus_texture, context);
@@ -78,6 +82,8 @@ public class MojRenderer implements GLSurfaceView.Renderer
         plane.velocity = 0.1f;
         plane.Translate(0, 0, 1);
         Controls.SetControlledObject(plane);
+        camera = new TrackCamera();
+        ((TrackCamera) camera).SetTrackedObject( plane );
 
         sphereData = new GLObjectData(context, R.raw.sfera, waterTexture);
 
@@ -156,26 +162,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
         plane.UpdatePosition();
 
         Controls.SetOrientation();
-
-        eyePositionTemp[0] = plane.position[0] - plane.orientation[0] * 0.0f + plane.zAxis[0] / 2.0f;
-        eyePositionTemp[1] = plane.position[1] - plane.orientation[1] * 0.0f + plane.zAxis[1] / 2.0f;
-        eyePositionTemp[2] = plane.position[2] - plane.orientation[2] * 0.0f + plane.zAxis[2] / 2.0f;
-
-        up = plane.zAxis.clone();
-        up = Controls.ExponentialSmoothing(up, upTm1, 0.05f);
-        upTm1 = up.clone();
-
-        eyePositionTemp = Controls.ExponentialSmoothing(eyePositionTemp, eyePositionTm1, 0.05f);
-
-        //SetEyePosition( plane.position[0], plane.position[1] + 1.2f, plane.position[2] + 1.5f );
-        SetEyePosition(eyePositionTemp[0], eyePositionTemp[1], eyePositionTemp[2]);
-        eyePositionTm1 = eyePosition.clone();
-        //SetCenter( plane.position[0] , plane.position[1] , plane.position[2]  );
-        SetCenter(plane.position[0] + plane.orientation[0] / 2.0f, plane.position[1] + plane.orientation[1] / 2.0f, plane.position[2] + plane.orientation[2] / 2.0f);
-
-        setLookAtM(viewMatrix, 0, eyePosition[0], eyePosition[1], eyePosition[2],
-                center[0], center[1], center[2], up[0], up[1], up[2]/*plane.zAxis[0], plane.zAxis[1], plane.zAxis[2]*/);
-
+        camera.UpdateCamera();
 
         plane.Draw();
 
@@ -187,8 +174,6 @@ public class MojRenderer implements GLSurfaceView.Renderer
 //        {
 //            object.Draw();
 //        }
-
-        //UseProgram( programTexture );
 
         spaceSphere.TranslateTo( plane.position[0], plane.position[1], plane.position[2] );
         spaceSphere.Draw();

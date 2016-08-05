@@ -43,13 +43,18 @@ public class GLCommon
 
     public static float[] center = {0.0f, 0.0f, 0.0f}, centerTm1 = new float[4];
 
-    public static float[] up = {0.0f, 0.0f, 1.0f, 1.0f};
+    public static float[] up = {0.0f, 0.0f, 1.0f, 1.0f}, upTm1 = new float[4];;
 
     public static float fov = 45;
     public static float nearZ = 0.1f;
     public static float farZ = 100;
 
     public static List<Integer> textureIDList = new ArrayList<>();
+
+    public static GLCamera camera;
+
+    static final int COLOUR = 0, TEXTURE = 1, TEXTURE_BLINN_PHONG = 2, TEXTURE_PHONG = 3;
+    public static int renderMode = 1;
 
     public static int InitProgram(Context context, int vertexShaderId, int fragmentShaderId)
     {
@@ -138,5 +143,19 @@ public class GLCommon
     {
         glUniform3f( eyePositionLocation, eyePosition[0], eyePosition[1], eyePosition[2] );
         glUniform3f( lightPositionLocation, lightPosition[0], lightPosition[1], lightPosition[2] );
+    }
+
+    public void SetRenderMode( int renderModep )
+    {
+        renderMode = renderModep;
+        switch ( renderMode )
+        {
+            case TEXTURE:
+                UseProgram( programTexture );
+                break;
+            case TEXTURE_PHONG:
+                UseProgram( programPhongTexture );
+                break;
+        }
     }
 }

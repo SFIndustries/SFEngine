@@ -14,14 +14,13 @@ import java.util.List;
 import static android.opengl.GLES20.*;
 import static android.opengl.Matrix.*;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 public class GLObject extends GLObjectData
 {
     FloatBuffer vertexBuffer, normalBuffer, UVbuffer;
 
     static final int BYTES_PER_FLOAT = 4;
+
+    int renderMode = TEXTURE;
 
     private float[] modelMatrix = new float[16];
     private float[] translationMatrix = new float[16];
@@ -89,16 +88,18 @@ public class GLObject extends GLObjectData
         textureID = textureIDp;
     }
 
+    public void SetRenderMode( int renderModep )
+    {
+        renderMode = renderModep;
+    }
+
     public void Draw()
     {
+            if ( renderMode != GLCommon.renderMode )
+            {
+                UseProgram( renderMode );
+            }
 
-        //multiplyMM(modelMatrix, 0, modelMatrix, 0, translationMatrix, 0);
-        //multiplyMM(modelMatrix, 0, modelMatrix, 0, rotationMatrix, 0);
-        //multiplyMM(modelMatrix, 0, modelMatrix, 0, scaleMatrix, 0);
-
-
-        //synchronized(Controls.mutex)
-        {
             setIdentityM(modelMatrix, 0);
             multiplyMM(modelMatrix, 0, scaleMatrix, 0, modelMatrix, 0); // 1. ili 3.?
             multiplyMM(modelMatrix, 0, rotationMatrix, 0, modelMatrix, 0); // 2.
@@ -110,7 +111,6 @@ public class GLObject extends GLObjectData
             glUniformMatrix4fv(modelViewProjectionMatrixLocation, 1, false, modelViewProjectionMatrix, 0);
             glUniformMatrix4fv(viewMatrixLocation, 1, false, viewMatrix, 0);
             glUniformMatrix4fv(modelMatrixLocation, 1, false, modelMatrix, 0);
-        }
 
 //        glUniform3f( eyePositionLocation, eyePosition[0], eyePosition[1], eyePosition[2] );
 //        glUniform3f( lightPositionLocation, lightPosition[0], lightPosition[1], lightPosition[2] );
@@ -131,29 +131,20 @@ public class GLObject extends GLObjectData
 
     public void Translate( float x, float y, float z )
     {
-        //synchronized(Controls.mutex)
-        {
             translateM(translationMatrix, 0, x, y, z);
             multiplyMV(position, 0, translationMatrix, 0, initPosition, 0);
-        }
     }
 
     public void TranslateTo( float x, float y, float z )
     {
-        //synchronized(Controls.mutex)
-        {
             setIdentityM(translationMatrix, 0);
             translateM(translationMatrix, 0, x, y, z);
             multiplyMV(position, 0, translationMatrix, 0, initPosition, 0);
-        }
     }
 
     public void Rotate( float angle, float xAxis, float yAxis, float zAxis )
     {
-        //synchronized(Controls.mutex)
-        {
             rotateM(rotationMatrix, 0, angle, xAxis, yAxis, zAxis);
-        }
     }
 
 //    public void Scale( float x, float y, float z )
@@ -169,7 +160,6 @@ public class GLObject extends GLObjectData
     public void UpdatePosition()
     {
         Translate( velocity * orientation[0], velocity * orientation[1], velocity * orientation[2] );
-
     }
 
 }
