@@ -5,16 +5,14 @@ package com.example.luka.openglestest;
  */
 
 import android.content.Context;
-import android.graphics.Camera;
 import android.opengl.GLSurfaceView;
 
-import static android.opengl.Matrix.multiplyMM;
-import static android.opengl.Matrix.multiplyMV;
+import static android.opengl.Matrix.length;
 import static android.opengl.Matrix.rotateM;
+
 import static com.example.luka.openglestest.engine.GLCommon.*;
 
 import com.example.luka.openglestest.engine.Controls;
-import com.example.luka.openglestest.engine.GLCamera;
 import com.example.luka.openglestest.engine.GLObject;
 import com.example.luka.openglestest.engine.GLObjectData;
 import com.example.luka.openglestest.engine.TrackCamera;
@@ -41,6 +39,15 @@ public class MojRenderer implements GLSurfaceView.Renderer
     float stariX = 0.0f, stariY = 0.0f;
 
     public GLObjectData sphereData, planeData, gridData;
+
+    public GLObjectData sphere100data, sphere150data;
+    public GLObject[] sphere100 = new GLObject[2];
+    public GLObject[] sphere150 = new GLObject[27];
+    float planeSphereDistancesMin;
+
+    public int currentSphere = 0;
+    public float radiusThreshold = 100, radiusAlpha0 = 125;
+
     int waterTexture, blueTexture, torusTexture, spaceTexture;
     public static GLObject plane, sphere, grid, spaceSphere;
     public static List<GLObject> spheres = new ArrayList<>();
@@ -53,6 +60,12 @@ public class MojRenderer implements GLSurfaceView.Renderer
     static float[] tempMatrix = new float[16], pitchMatrix = new float[16];
     static float[] tempVector = new float[4];
     float[] tempOrientation = new float[4], tempZAxis = new float[4];
+    float[] spherePlaneDistanceTemp = new float[4];
+    float[] planeCenterVector = new float[4];
+
+    float spherePlaneDistance, planeCenterVectorLength;
+
+    int i, j, k, x, y, z;
 
     public MojRenderer(Context context)
     {
@@ -67,7 +80,8 @@ public class MojRenderer implements GLSurfaceView.Renderer
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
 
-
+        //glEnable(GL_BLEND);
+        //glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
         waterTexture = LoadTexture(R.raw.voda, context);
         blueTexture = LoadTexture(R.raw.wall, context);
@@ -80,7 +94,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
         plane = new GLObject(context, R.raw.f16_1_uv, LoadTexture(R.raw.avion_texture, context));
         plane.SetInitOrientation(new float[]{-plane.yAxis[0], -plane.yAxis[1], -plane.yAxis[2], 1});
         plane.velocity = 0.1f;
-        plane.Translate(0, 0, 1);
+        //plane.Translate(0, 0, 1);
         Controls.SetControlledObject(plane);
         camera = new TrackCamera();
         ((TrackCamera) camera).SetTrackedObject( plane );
@@ -97,7 +111,6 @@ public class MojRenderer implements GLSurfaceView.Renderer
 //            spheres.add(sphere);
 //        }
 
-
 //        sphere = new GLObject( sphereData );
 //        sphere.SetTexture( torusTexture );
 //        sphere.Translate(1.0f, -3.0f, 0);
@@ -111,8 +124,44 @@ public class MojRenderer implements GLSurfaceView.Renderer
 //        sphere.Translate(-2.0f, -7.0f, 0);
 //        spheres.add(sphere);
 
-        spaceSphere = new GLObject( context, R.raw.sfera_unutra, spaceTexture );
-        spaceSphere.Rotate(90, 0, 0, 1);
+        spaceSphere = new GLObject( context, R.raw.sfera_unutra_150, spaceTexture );
+
+        //spaceSphere.Rotate(90, 0, 0, 1);
+
+        //------------------------------------------------------------------------------------
+//        Random r = new Random();
+//        sphere150data = new GLObjectData(context, R.raw.sfera_unutra_150, spaceTexture);
+//        for(i = 0; i < 27; i++)
+//        {
+//            sphere150[i] = new GLObject( sphere150data );
+//            sphere150[i].Rotate( r.nextFloat(), r.nextFloat(), r.nextFloat(), r.nextFloat() );
+//        }
+//
+//        currentSphere = 0;
+//
+//        i = 0;
+//        for (x = -150; x <= 150; x+=150)
+//        {
+//            for (y = -150; y <= 150; y+=150)
+//            {
+//                for (z = -75; z <= 75; z+=75)
+//                {
+//                    if (       x == 0
+//                            && y == 0
+//                            && z == 0 )
+//                    {
+//                        currentSphere = i;
+//                    }
+//
+//                    sphere150[i].TranslateTo(   sphere150[currentSphere].position[0] + x,
+//                            sphere150[currentSphere].position[1] + y,
+//                            sphere150[currentSphere].position[2] + z );
+//
+//                    i++;
+//                }
+//            }
+//        }
+        //------------------------------------------------------------------------------------
 
         programPhongTexture = InitProgram(context, R.raw.vertex_shader_phong, R.raw.fragment_shader_phong);
         programTexture = InitProgram(context, R.raw.vertex_shader_texture, R.raw.fragment_shader_texture);
@@ -156,8 +205,8 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
         //Showcase();
 
-        //UseProgram( programTexture );
-        //SetUniformsShader();
+        if ( renderMode == TEXTURE_PHONG )
+            SetUniformsShader();
 
         plane.UpdatePosition();
 
@@ -167,16 +216,84 @@ public class MojRenderer implements GLSurfaceView.Renderer
         plane.Draw();
 
         // pomakni sferu na mjesto aviona
+        spaceSphere.TranslateTo( plane.position[0], plane.position[1], plane.position[2] );
+        spaceSphere.Draw();
+
+        //------------------------------------------------------------------------------------
+
+//        for(int i = 0; i<plane.position.length; i++)
+//        {
+//            planeCenterVector[i] = sphere150[currentSphere].position[i] - plane.position[i];
+//        }
+//
+//        planeCenterVectorLength = length(planeCenterVector[0],planeCenterVector[1],planeCenterVector[2]);
+//
+//
+//
+//        if ( planeCenterVectorLength > 150 )
+//        {
+//            sphere150[currentSphere].alpha = 1f;
+//
+//            for(int i = 0; i<plane.position.length; i++)
+//            {
+//                planeCenterVector[i] = sphere150[0].position[i] - plane.position[i];
+//            }
+//            planeCenterVectorLength = length(planeCenterVector[0],planeCenterVector[1],planeCenterVector[2]);
+//            currentSphere = 0;
+//
+//            for (j = 0; j < sphere150.length; j++)
+//            {
+//                if ( j == currentSphere )
+//                    continue;
+//
+//                for(int i = 0; i<plane.position.length; i++)
+//                {
+//                    planeCenterVector[i] = sphere150[j].position[i] - plane.position[i];
+//                }
+//                if ( length(planeCenterVector[0],planeCenterVector[1],planeCenterVector[2]) < planeCenterVectorLength )
+//                {
+//                    currentSphere = j;
+//                    planeCenterVectorLength = length(planeCenterVector[0],planeCenterVector[1],planeCenterVector[2]);
+//                }
+//            }
+//        }
+//
+//        for(int i = 0; i<planeCenterVector.length; i++)
+//        {
+//            planeCenterVector[i] /= planeCenterVectorLength;
+//        }
+//
+//        double sum = 0;
+//        for(i = 0; i < 3; i++) //skalarni produkt
+//        {
+//            sum += planeCenterVector[i] * plane.orientation[i];
+//        }
+//
+//        double angle = Math.toDegrees(Math.acos(sum));
+//
+//        if ( (angle > 90 || angle < -90) && planeCenterVectorLength > radiusThreshold  )
+//        {
+//            sphere150[currentSphere].alpha = 1 - ( planeCenterVectorLength - radiusThreshold )/(radiusAlpha0 - radiusThreshold);
+//        }
+//
+//        for(i = 0; i<sphere150.length; i++)
+//        {
+//            sphere150[i].Draw();
+//        }
+//
+//        sphere150[13].Draw();
+
+        //------------------------------------------------------------------------------------
 
         //grid.Draw();
 
+        // TODO - VBO za objekte istog tipa npr za planete, zvijezde
 //        for(GLObject object: spheres)
 //        {
 //            object.Draw();
 //        }
 
-        spaceSphere.TranslateTo( plane.position[0], plane.position[1], plane.position[2] );
-        spaceSphere.Draw();
+
 
         //sphere.Draw();
 

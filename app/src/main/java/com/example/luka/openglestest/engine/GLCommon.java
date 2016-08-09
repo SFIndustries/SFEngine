@@ -41,6 +41,8 @@ public class GLCommon
     public static float[] eyePosition = {1.0f, 1.0f, 1.0f, 1.0f}, eyePositionTm1 = new float[4];
     public static int eyePositionLocation;
 
+    public static int alphaLocation;
+
     public static float[] center = {0.0f, 0.0f, 0.0f}, centerTm1 = new float[4];
 
     public static float[] up = {0.0f, 0.0f, 1.0f, 1.0f}, upTm1 = new float[4];;
@@ -53,7 +55,7 @@ public class GLCommon
 
     public static GLCamera camera;
 
-    static final int COLOUR = 0, TEXTURE = 1, TEXTURE_BLINN_PHONG = 2, TEXTURE_PHONG = 3;
+    public static final int COLOUR = 0, TEXTURE = 1, TEXTURE_BLINN_PHONG = 2, TEXTURE_PHONG = 3;
     public static int renderMode = 1;
 
     public static int InitProgram(Context context, int vertexShaderId, int fragmentShaderId)
@@ -75,6 +77,8 @@ public class GLCommon
 
         glUseProgram( program );
 
+        //TODO - ovisno o shaderu inicijalizirati lokacije samo za neke atribute/uniforme
+
         aPositionLocation = glGetAttribLocation(program, "a_Position");
         aNormalLocation = glGetAttribLocation(program, "a_Normal");
         aTextureLocation = glGetAttribLocation(program, "a_Texture");
@@ -85,6 +89,8 @@ public class GLCommon
 
         lightPositionLocation = glGetUniformLocation(program, "LightPosition_worldspace");
         eyePositionLocation = glGetUniformLocation(program, "ociste");
+
+        alphaLocation = glGetUniformLocation(program, "alpha");
 
         glEnableVertexAttribArray(GLCommon.aPositionLocation);
         glEnableVertexAttribArray(GLCommon.aNormalLocation);

@@ -59,7 +59,7 @@ public class Controls
         // orijentacija uredaja daje promjenu orijentacije aviona
 
         android.opengl.Matrix.setRotateM(
-                tempMatrix, 0, Controls.dY, controlledObject.yAxis[0], controlledObject.yAxis[1], controlledObject.yAxis[2]);
+                tempMatrix, 0, Controls.dY, controlledObject.zAxis[0], controlledObject.zAxis[1], controlledObject.zAxis[2]);
         multiplyMM(controlledObject.rotationMatrix, 0, tempMatrix, 0, controlledObject.rotationMatrix, 0);
         multiplyMV(tempVector, 0, tempMatrix, 0, controlledObject.xAxis, 0);
 
