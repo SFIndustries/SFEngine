@@ -17,15 +17,9 @@ import static android.opengl.Matrix.*;
 public class GLObject extends GLObjectData
 {
     FloatBuffer vertexBuffer, normalBuffer, UVbuffer;
-    FloatBuffer interleavedBuffer;
-    int dataLength;
-    int bufferIndex;
-
-    static final int BYTES_PER_FLOAT = 4;
-    static final int VERTEX_DATA_SIZE = 3;
-    static final int NORMAL_DATA_SIZE = 3;
-    static final int UV_DATA_SIZE = 2;
-    int stride = (VERTEX_DATA_SIZE + NORMAL_DATA_SIZE + UV_DATA_SIZE) * BYTES_PER_FLOAT;
+    //FloatBuffer interleavedBuffer;
+    //int dataLength;
+    public int bufferIndexTemp;
 
     int renderMode = TEXTURE;
 
@@ -43,6 +37,9 @@ public class GLObject extends GLObjectData
 
     public float alpha = 1.0f;
 
+
+    // TODO - promijeniti GLObjectData da odmah napravi buffer za tip objekta
+    // TODO - ovo je iz nekog razloga radilo sporo - jos provjeriti
     public GLObject( Context context, int resourceId, int textureIDp )
     {
         super( context, resourceId, textureIDp );
@@ -56,16 +53,19 @@ public class GLObject extends GLObjectData
 
     public GLObject( GLObjectData object )
     {
+
         vertices = object.vertices.clone();
         normals = object.normals.clone();
         UVs = object.UVs.clone();
 
-        dataLength = vertices.length + normals.length + UVs.length;
+        //dataLength = vertices.length + normals.length + UVs.length;
+
+        bufferIndex = object.bufferIndex;
 
         textureID = object.textureID;
 
         //InitBuffersClientSide();
-        InitBuffersVBO();
+        //InitBuffersVBO();
         InitMatrices();
     }
 
@@ -90,6 +90,41 @@ public class GLObject extends GLObjectData
         UVbuffer.put(UVs);
     }
 
+    public void InitBuffersVBO()
+    {
+        interleavedBuffer = ByteBuffer.allocateDirect(dataLength * BYTES_PER_FLOAT)
+                .order(ByteOrder.nativeOrder()).asFloatBuffer();
+
+        int vertexOffset = 0;
+        int normalOffset = 0;
+        int UVoffset = 0;
+
+        for (int i = 0; i < vertices.length / 3; i++)
+        {
+            interleavedBuffer.put(vertices, vertexOffset, VERTEX_DATA_SIZE);
+            vertexOffset += VERTEX_DATA_SIZE;
+            interleavedBuffer.put(normals, normalOffset, NORMAL_DATA_SIZE);
+            normalOffset += NORMAL_DATA_SIZE;
+            interleavedBuffer.put(UVs, UVoffset, UV_DATA_SIZE);
+            UVoffset += UV_DATA_SIZE;
+        }
+
+        interleavedBuffer.position(0);
+
+        final int buffers[] = new int[1];
+        glGenBuffers(1, buffers, 0);
+
+        glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
+        glBufferData(GL_ARRAY_BUFFER, interleavedBuffer.capacity() * BYTES_PER_FLOAT, interleavedBuffer, GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        bufferIndex = buffers[0];
+
+        interleavedBuffer.limit(0);
+        interleavedBuffer = null;
+    }
+
     public void InitMatrices()
     {
         setIdentityM(translationMatrix, 0);
@@ -108,7 +143,11 @@ public class GLObject extends GLObjectData
         renderMode = renderModep;
     }
 
-    public void Draw()
+    public void Draw( /*int bufferIndexp*/ )
+
+    // TODO - koristiti isti VBO za crtanje objekata istog tipa (npr. sfera)
+    // TODO objekti ce se razlikovati po matricama i aktivnoj teksturi
+
     {
         if ( renderMode != GLCommon.renderMode )
         {
@@ -154,6 +193,13 @@ public class GLObject extends GLObjectData
 
         // VBO
         //--------------------------------------------------------------------------------------
+
+//        if (bufferIndexp == -1)
+//        {
+//            bufferIndexTemp = bufferIndex;
+//        }
+//        else bufferIndexTemp = bufferIndexp;
+
         glBindBuffer(GL_ARRAY_BUFFER, bufferIndex);
         glVertexAttribPointer(aPositionLocation, VERTEX_DATA_SIZE, GL_FLOAT, false, stride, 0);
 
@@ -170,39 +216,7 @@ public class GLObject extends GLObjectData
         //--------------------------------------------------------------------------------------
     }
 
-    public void InitBuffersVBO()
-    {
-        interleavedBuffer = ByteBuffer.allocateDirect(dataLength * BYTES_PER_FLOAT)
-                .order(ByteOrder.nativeOrder()).asFloatBuffer();
 
-        int vertexOffset = 0;
-        int normalOffset = 0;
-        int UVoffset = 0;
-        for (int i = 0; i < vertices.length / 3; i++)
-        {
-            interleavedBuffer.put(vertices, vertexOffset, VERTEX_DATA_SIZE);
-            vertexOffset += VERTEX_DATA_SIZE;
-            interleavedBuffer.put(normals, normalOffset, NORMAL_DATA_SIZE);
-            normalOffset += NORMAL_DATA_SIZE;
-            interleavedBuffer.put(UVs, UVoffset, UV_DATA_SIZE);
-            UVoffset += UV_DATA_SIZE;
-        }
-
-        interleavedBuffer.position(0);
-
-        final int buffers[] = new int[1];
-        glGenBuffers(1, buffers, 0);
-
-        glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
-        glBufferData(GL_ARRAY_BUFFER, interleavedBuffer.capacity() * BYTES_PER_FLOAT, interleavedBuffer, GL_STATIC_DRAW);
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        bufferIndex = buffers[0];
-
-        interleavedBuffer.limit(0);
-        interleavedBuffer = null;
-    }
 
     public void Translate( float x, float y, float z )
     {

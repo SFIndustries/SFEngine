@@ -25,7 +25,19 @@
             android:text="Reset"
             android:id="@+id/buttonReset"
             android:layout_gravity="bottom" />
+
     </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Large Text"
+        android:id="@+id/textViewFPSCounter"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="5dp"
+        android:textStyle="bold"
+        android:textColor="#ffff00" />
 
     <!--android:layout_alignParentTop="true"-->
         <!--android:layout_alignParentLeft="true"-->

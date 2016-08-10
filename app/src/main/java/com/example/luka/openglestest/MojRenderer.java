@@ -7,7 +7,6 @@ package com.example.luka.openglestest;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 
-import static android.opengl.Matrix.length;
 import static android.opengl.Matrix.rotateM;
 
 import static com.example.luka.openglestest.engine.GLCommon.*;
@@ -29,6 +28,8 @@ import static android.opengl.GLES20.*;
 import static android.opengl.Matrix.perspectiveM;
 import static android.opengl.Matrix.setLookAtM;
 import static com.example.luka.openglestest.engine.GLCommon.SetEyePosition;
+
+
 
 public class MojRenderer implements GLSurfaceView.Renderer
 {
@@ -66,6 +67,21 @@ public class MojRenderer implements GLSurfaceView.Renderer
     float spherePlaneDistance, planeCenterVectorLength;
 
     int i, j, k, x, y, z;
+    int bufferIndex;
+
+    float FPS = 0, FPSSum = 0, FPSFinal = 0, dt;
+    long tStart = -1, t;
+    float FPSInterval = 0.1f; // [s]
+    int FPSi = 1, FPSWait = 10, FPSWaitI = 0;
+    Runnable FPSRunnable = new Runnable()
+    {
+        @Override
+        public void run()
+        {
+                ((MainActivity) context).textViewFPSCounter.setText(Float.toString(FPSFinal));
+        }
+    };
+
 
     public MojRenderer(Context context)
     {
@@ -91,6 +107,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
         grid = new GLObject(context, R.raw.grid, LoadTexture(R.raw.checkers, context));
 
+        //planeData = new GLObjectData(context, R.raw.f16_1_uv, LoadTexture(R.raw.avion_texture, context));
         plane = new GLObject(context, R.raw.f16_1_uv, LoadTexture(R.raw.avion_texture, context));
         plane.SetInitOrientation(new float[]{-plane.yAxis[0], -plane.yAxis[1], -plane.yAxis[2], 1});
         plane.velocity = 0.1f;
@@ -101,15 +118,17 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
         sphereData = new GLObjectData(context, R.raw.sfera, waterTexture);
 
-//        Random rand = new Random();
-//        for (int i = 0; i < 500; i++)
-//        {
-//            sphere = new GLObject( sphereData );
-//            sphere.TranslateTo( rand.nextInt((100 - (-100)) + 1) - 100,
-//                                rand.nextInt((100 - (-100)) + 1) - 100,
-//                                rand.nextInt((100 - (-100)) + 1) - 100);
-//            spheres.add(sphere);
-//        }
+        Random rand = new Random();
+        for (int i = 0; i < 100; i++)
+        {
+            sphere = new GLObject( sphereData );
+            sphere.TranslateTo( rand.nextInt((50 - (-50)) + 1) - 50,
+                                rand.nextInt((50 - (-50)) + 1) - 50,
+                                rand.nextInt((50 - (-50)) + 1) - 50);
+            spheres.add(sphere);
+        }
+
+        bufferIndex = spheres.get(0).bufferIndex;
 
 //        sphere = new GLObject( sphereData );
 //        sphere.SetTexture( torusTexture );
@@ -200,6 +219,11 @@ public class MojRenderer implements GLSurfaceView.Renderer
     @Override
     public void onDrawFrame(GL10 glUnused)
     {
+        if (FPSWaitI > FPSWait)
+            FPSCounter();
+        else
+            FPSWaitI++;
+
         // Clear the rendering surface.
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -287,13 +311,12 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
         //grid.Draw();
 
-        // TODO - VBO za objekte istog tipa npr za planete, zvijezde
-//        for(GLObject object: spheres)
-//        {
-//            object.Draw();
-//        }
-
-
+        // TODO - koristiti isti VBO za crtanje objekata istog tipa (npr. sfera)
+        for(GLObject object: spheres)
+        {
+            object.Draw();  // TODO - strpati sve objekte (npr staticne) u 1 VBO da se Draw() zove samo jednom,
+                            // TODO pomnoziti s matricama da se dobiju u prostoru
+        }
 
         //sphere.Draw();
 
@@ -357,6 +380,26 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
         setLookAtM( viewMatrix, 0, eyePosition[0], eyePosition[1], eyePosition[2], center[0], center[1], center[2], 0.0f, 0.0f, 1.0f);
         glUniformMatrix4fv(viewMatrixLocation, 1, false, viewMatrix, 0);
+    }
+
+    // prosjecni fps
+    // osvjezava se svakih FPSInterval sekundi
+    public void FPSCounter()
+    {
+        t = System.nanoTime();
+        if ( tStart == -1 )
+            tStart = t;
+        dt = (t - tStart) / 1000000000f;
+        if ( dt >= FPSInterval )
+        {
+            FPSSum = FPSSum + 1f * FPS / dt;
+            FPSFinal = FPSSum / FPSi;
+            ((MainActivity) context).runOnUiThread(FPSRunnable);
+            FPS = 0;
+            tStart = t;
+            FPSi++;
+        }
+        FPS++;
     }
 }
 
