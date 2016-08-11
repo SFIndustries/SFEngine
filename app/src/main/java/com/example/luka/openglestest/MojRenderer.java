@@ -108,7 +108,8 @@ public class MojRenderer implements GLSurfaceView.Renderer
         grid = new GLObject(context, R.raw.grid, LoadTexture(R.raw.checkers, context));
 
         //planeData = new GLObjectData(context, R.raw.f16_1_uv, LoadTexture(R.raw.avion_texture, context));
-        plane = new GLObject(context, R.raw.f16_1_uv, LoadTexture(R.raw.avion_texture, context));
+        //plane = new GLObject(context, R.raw.f16_1_uv, LoadTexture(R.raw.avion_texture, context));
+        plane = new GLObject(context, R.raw.main_ship, LoadTexture(R.raw.main_ship_texture, context));
         plane.SetInitOrientation(new float[]{-plane.yAxis[0], -plane.yAxis[1], -plane.yAxis[2], 1});
         plane.velocity = 0.1f;
         //plane.Translate(0, 0, 1);
