@@ -5,7 +5,6 @@ package com.example.luka.openglestest;
  */
 
 import android.content.Context;
-import android.graphics.BitmapFactory;
 import android.opengl.GLSurfaceView;
 
 import static android.opengl.Matrix.rotateM;
@@ -110,23 +109,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
         //planeData = new GLObjectData(context, R.raw.f16_1_uv, LoadTexture(R.raw.avion_texture, context));
         //plane = new GLObject(context, R.raw.f16_1_uv, LoadTexture(R.raw.avion_texture, context));
-
-        planeData = new GLObjectData(context, R.raw.avion1, LoadTexture(R.raw.avion1texture2, context));
-        //plane = new GLObject(context, R.raw.avion1, LoadTexture(R.raw.avion1texture2, context));
-        plane = new GLObject(planeData);
-        plane.SetRenderMode(TEXTURE);
-
-//        ((MainActivity) context).runOnUiThread(new Runnable() {
-//            @Override
-//            public void run()
-//            {
-//                final BitmapFactory.Options options = new BitmapFactory.Options();
-//                options.inScaled = false;   // No pre-scaling
-//                ((MainActivity) context).imageViewTexture.setImageBitmap(BitmapFactory.decodeResource(context.getResources(), R.raw.avion1texture2, options));
-//            }
-//        });
-
-        //plane.SetRenderMode(TEXTURE_PHONG);
+        plane = new GLObject(context, R.raw.main_ship, LoadTexture(R.raw.main_ship_texture, context));
         plane.SetInitOrientation(new float[]{-plane.yAxis[0], -plane.yAxis[1], -plane.yAxis[2], 1});
         plane.velocity = 0.1f;
         //plane.Translate(0, 0, 1);
