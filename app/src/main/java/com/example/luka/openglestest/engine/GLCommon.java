@@ -87,6 +87,8 @@ public class GLCommon
         modelMatrixLocation = glGetUniformLocation(program, "M");
         modelViewProjectionMatrixLocation = glGetUniformLocation(program, "MVP");
 
+        textureUniformLocation = glGetUniformLocation(program, "u_Texture");
+
         lightPositionLocation = glGetUniformLocation(program, "LightPosition_worldspace");
         eyePositionLocation = glGetUniformLocation(program, "ociste");
 

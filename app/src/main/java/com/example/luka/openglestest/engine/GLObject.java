@@ -21,7 +21,7 @@ public class GLObject extends GLObjectData
     //int dataLength;
     public int bufferIndexTemp;
 
-    int renderMode = TEXTURE;
+    int renderMode = TEXTURE, renderModePrevious;
 
     private float[] modelMatrix = new float[16];
     private float[] translationMatrix = new float[16];
@@ -151,6 +151,7 @@ public class GLObject extends GLObjectData
     {
         if ( renderMode != GLCommon.renderMode )
         {
+            renderModePrevious = GLCommon.renderMode;
             UseProgram( renderMode );
         }
 
@@ -177,7 +178,8 @@ public class GLObject extends GLObjectData
         //TODO samo postaviti aktivnu teksturu;
         glActiveTexture(GL_TEXTURE0);
 
-        glUniform1i(textureID, 0);
+        //glUniform1i(textureID, 0);
+        glUniform1i(textureUniformLocation, 0);
 
         // client side
         //--------------------------------------------------------------------------------------
@@ -214,6 +216,8 @@ public class GLObject extends GLObjectData
 
         glDrawArrays(GL_TRIANGLES, 0, vertices.length / 3);
         //--------------------------------------------------------------------------------------
+
+        //UseProgram( renderModePrevious );
     }
 
 

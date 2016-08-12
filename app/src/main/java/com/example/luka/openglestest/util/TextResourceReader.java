@@ -94,14 +94,16 @@ public class TextResourceReader
                     vrhovi.add(  tempVrhovi.elementAt( (Integer.parseInt(parts3[0])-1)*3+1 )  );
                     vrhovi.add(  tempVrhovi.elementAt( (Integer.parseInt(parts3[0])-1)*3+2 )  );
 
+                    // V koordinata je INVERTIRANA !!!
+
                     UV.add(  tempUV.elementAt( (Integer.parseInt(parts1[1])-1)*2 )  );
-                    UV.add(  tempUV.elementAt( (Integer.parseInt(parts1[1])-1)*2+1 )  );
+                    UV.add(  1 - (float) tempUV.elementAt( (Integer.parseInt(parts1[1])-1)*2+1 )  );
 
                     UV.add(  tempUV.elementAt( (Integer.parseInt(parts2[1])-1)*2 )  );
-                    UV.add(  tempUV.elementAt( (Integer.parseInt(parts2[1])-1)*2+1 )  );
+                    UV.add(  1 - (float) tempUV.elementAt( (Integer.parseInt(parts2[1])-1)*2+1 )  );
 
                     UV.add(  tempUV.elementAt( (Integer.parseInt(parts3[1])-1)*2 )  );
-                    UV.add(  tempUV.elementAt( (Integer.parseInt(parts3[1])-1)*2+1 )  );
+                    UV.add(  1 - (float) tempUV.elementAt( (Integer.parseInt(parts3[1])-1)*2+1 )  );
 
 
                     normale.add(  tempNormale.elementAt( (Integer.parseInt(parts1[2])-1)*3 )  );
@@ -135,8 +137,8 @@ public class TextResourceReader
         }
         lista.add(floatArray);
 
-        floatArray = new float[vrhovi.size()];
-        for (int i=0; i<vrhovi.size(); i++)
+        floatArray = new float[normale.size()];
+        for (int i=0; i<normale.size(); i++)
         {
             floatArray[i] = (float) normale.elementAt(i);
         }

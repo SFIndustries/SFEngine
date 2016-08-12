@@ -71,6 +71,8 @@ public class GLObjectData
             normalOffset += NORMAL_DATA_SIZE;
             interleavedBuffer.put(UVs, UVoffset, UV_DATA_SIZE);
             UVoffset += UV_DATA_SIZE;
+//            interleavedBuffer.put(normals, normalOffset, NORMAL_DATA_SIZE);
+//            normalOffset += NORMAL_DATA_SIZE;
         }
 
         interleavedBuffer.position(0);
