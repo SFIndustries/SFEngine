@@ -95,7 +95,6 @@ public class TextResourceReader
                     vrhovi.add(  tempVrhovi.elementAt( (Integer.parseInt(parts3[0])-1)*3+2 )  );
 
                     // V koordinata je INVERTIRANA !!!
-
                     UV.add(  tempUV.elementAt( (Integer.parseInt(parts1[1])-1)*2 )  );
                     UV.add(  1 - (float) tempUV.elementAt( (Integer.parseInt(parts1[1])-1)*2+1 )  );
 
