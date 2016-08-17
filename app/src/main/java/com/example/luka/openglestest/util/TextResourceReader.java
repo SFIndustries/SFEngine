@@ -39,7 +39,6 @@ public class TextResourceReader
     }
 
     public static List LoadObjFromResource(Context context, int resourceId)
-
     {
         Vector vrhovi = new Vector();
         Vector normale = new Vector();
@@ -153,6 +152,47 @@ public class TextResourceReader
         return lista;
         //return floatArray;
 
+    }
+
+    public static float[][] LoadCollisionObject(Context context, int resourceId)
+    {
+        Vector vertices = new Vector();
+        Vector objects = new Vector();
+        float[] currentVertex = new float[3];
+
+        try {
+
+            InputStream inputStream =
+                    context.getResources().openRawResource(resourceId);
+            InputStreamReader inputStreamReader =new InputStreamReader(inputStream);
+            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+            String nextLine;
+            while ((nextLine = bufferedReader.readLine()) != null)
+            {
+                String[] parts = nextLine.split(" ");
+
+                if (parts[0].equals("v"))
+                {
+                    currentVertex[0] = Float.parseFloat(parts[1]);
+                    currentVertex[1] = Float.parseFloat(parts[2]);
+                    currentVertex[2] = Float.parseFloat(parts[3]);
+
+                    vertices.add(currentVertex);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        float[][] floatArray = new float[vertices.size()][3];
+        for (int i=0; i<vertices.size(); i++)
+        {
+            floatArray[i] = (float[]) (vertices.elementAt(i));
+        }
+
+        return floatArray;
     }
 
 }

@@ -14,6 +14,7 @@ import static com.example.luka.openglestest.engine.GLCommon.*;
 import com.example.luka.openglestest.engine.Controls;
 import com.example.luka.openglestest.engine.GLObject;
 import com.example.luka.openglestest.engine.GLObjectData;
+import com.example.luka.openglestest.engine.GLObjectStatic;
 import com.example.luka.openglestest.engine.TrackCamera;
 
 import java.util.ArrayList;
@@ -28,8 +29,6 @@ import static android.opengl.GLES20.*;
 import static android.opengl.Matrix.perspectiveM;
 import static android.opengl.Matrix.setLookAtM;
 import static com.example.luka.openglestest.engine.GLCommon.SetEyePosition;
-
-
 
 public class MojRenderer implements GLSurfaceView.Renderer
 {
@@ -49,8 +48,8 @@ public class MojRenderer implements GLSurfaceView.Renderer
     public int currentSphere = 0;
     public float radiusThreshold = 100, radiusAlpha0 = 125;
 
-    int waterTexture, blueTexture, torusTexture, spaceTexture;
-    public static GLObject plane, sphere, grid, spaceSphere;
+    int waterTexture, blueTexture, torusTexture, spaceTexture, EarthTexture;
+    public static GLObject plane, sphere, grid, spaceSphere, Earth;
     public static List<GLObject> spheres = new ArrayList<>();
 
     int directionX = 1, directionY = -1, directionZ = 1;
@@ -99,11 +98,17 @@ public class MojRenderer implements GLSurfaceView.Renderer
         //glEnable(GL_BLEND);
         //glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
+
         waterTexture = LoadTexture(R.raw.voda, context);
         blueTexture = LoadTexture(R.raw.wall, context);
         torusTexture = LoadTexture(R.raw.torus_texture, context);
         //spaceTexture = LoadTexture(R.raw.space_hd, context);
         spaceTexture = LoadTexture(R.raw.space_sphere_texture, context);
+        try {
+            EarthTexture = LoadTexture(R.raw.earth_8k_90p, context);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         grid = new GLObject(context, R.raw.grid, LoadTexture(R.raw.checkers, context));
 
@@ -120,16 +125,21 @@ public class MojRenderer implements GLSurfaceView.Renderer
         sphereData = new GLObjectData(context, R.raw.sfera, waterTexture);
 
         Random rand = new Random();
+        int dY = 10;
         for (int i = 0; i < 100; i++)
         {
-            sphere = new GLObject( sphereData );
-            sphere.TranslateTo( rand.nextInt((50 - (-50)) + 1) - 50,
-                                rand.nextInt((50 - (-50)) + 1) - 50,
-                                rand.nextInt((50 - (-50)) + 1) - 50);
+            sphere = new GLObjectStatic( sphereData );
+            sphere.TranslateTo( 0,/*rand.nextInt((200 - (-200)) + 1) - 200,*/
+                                -i*dY,
+                                /*rand.nextInt((200 - (-200)) + 1) - 200,*/
+                                0/*rand.nextInt((200 - (-200)) + 1) - 200*/);
             spheres.add(sphere);
         }
 
-        bufferIndex = spheres.get(0).bufferIndex;
+        Earth = new GLObjectStatic(context, R.raw.earth_700, EarthTexture);
+        Earth.Translate(0, -800, 0);
+
+        //bufferIndex = spheres.get(0).bufferIndex;
 
 //        sphere = new GLObject( sphereData );
 //        sphere.SetTexture( torusTexture );
@@ -235,14 +245,18 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
         plane.UpdatePosition();
 
-        Controls.SetOrientation();
-        camera.UpdateCamera();
-
-        plane.Draw();
+        Controls.SetOrientation(); // dretva 1 +
+        camera.UpdateCamera(); // dretva 2 ?
 
         // pomakni sferu na mjesto aviona
         spaceSphere.TranslateTo( plane.position[0], plane.position[1], plane.position[2] );
+
+        glDisable(GL_DEPTH_TEST);
         spaceSphere.Draw();
+        glEnable(GL_DEPTH_TEST);
+
+        plane.Draw();
+
 
         //------------------------------------------------------------------------------------
 
@@ -313,11 +327,13 @@ public class MojRenderer implements GLSurfaceView.Renderer
         //grid.Draw();
 
         // TODO - koristiti isti VBO za crtanje objekata istog tipa (npr. sfera)
-        for(GLObject object: spheres)
-        {
-            object.Draw();  // TODO - strpati sve objekte (npr staticne) u 1 VBO da se Draw() zove samo jednom,
-                            // TODO pomnoziti s matricama da se dobiju u prostoru
-        }
+//        for(GLObject object: spheres)
+//        {
+//            object.Draw();  // TODO - strpati sve objekte (npr staticne) u 1 VBO da se Draw() zove samo jednom,
+//                            // TODO pomnoziti s matricama da se dobiju u prostoru
+//        }
+
+        Earth.Draw();
 
         //sphere.Draw();
 
@@ -341,8 +357,9 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
     public void handleTouchPress(float normalizedX, float normalizedY)
     {
-        stariX = normalizedX;
-        stariY = normalizedY;
+//        stariX = normalizedX;
+//        stariY = normalizedY;
+
     }
 
     public void handleTouchDrag(float normalizedX, float normalizedY)

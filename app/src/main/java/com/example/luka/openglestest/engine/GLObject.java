@@ -23,10 +23,10 @@ public class GLObject extends GLObjectData
 
     int renderMode = TEXTURE, renderModePrevious;
 
-    private float[] modelMatrix = new float[16];
-    private float[] translationMatrix = new float[16];
+    public float[] modelMatrix = new float[16];
+    public float[] translationMatrix = new float[16];
     public float[] rotationMatrix = new float[16];
-    private float[] scaleMatrix = new float[16];
+    public float[] scaleMatrix = new float[16];
 
     public float[]  xAxis = {1.0f, 0, 0, 1}, yAxis = {0, 1.0f, 0, 1}, zAxis = {0, 0, 1.0f, 1},
                     xAxisInit = {1.0f, 0, 0, 1}, yAxisInit = {0, 1.0f, 0, 1}, zAxisInit = {0, 0, 1.0f, 1} ;
@@ -38,8 +38,8 @@ public class GLObject extends GLObjectData
     public float alpha = 1.0f;
 
 
-    // TODO - promijeniti GLObjectData da odmah napravi buffer za tip objekta
-    // TODO - ovo je iz nekog razloga radilo sporo - jos provjeriti
+    public GLObject() {}
+
     public GLObject( Context context, int resourceId, int textureIDp )
     {
         super( context, resourceId, textureIDp );
@@ -174,12 +174,12 @@ public class GLObject extends GLObjectData
 
         glBindTexture(GL_TEXTURE_2D, textureID);
 
-        //TODO - bindati teksture na pocetku za GL_TEXTURE0, GL_TEXTURE1 itd pa
+        //TODO - bindati teksture na pocetku za GL_TEXTURE0, GL_TEXTURE1 (i=0,1..., GL_TEXTURE0 + i) itd pa
         //TODO samo postaviti aktivnu teksturu;
         glActiveTexture(GL_TEXTURE0);
 
         //glUniform1i(textureID, 0);
-        glUniform1i(textureUniformLocation, 0);
+        glUniform1i(textureUniformLocation, 0); // ovo se mozda treba raditi samo kod inita shadera
 
         // client side
         //--------------------------------------------------------------------------------------
@@ -221,7 +221,6 @@ public class GLObject extends GLObjectData
     }
 
 
-
     public void Translate( float x, float y, float z )
     {
         translateM(translationMatrix, 0, x, y, z);
@@ -245,9 +244,10 @@ public class GLObject extends GLObjectData
 //        scaleM( scaleMatrix, 0, x, y, z );
 //    }
 
-    public void SetInitOrientation(float[] vector )
+    public void SetInitOrientation( float[] vector )
     {
         initOrientation = vector.clone();
+        orientation = initOrientation.clone();
     }
 
     public void UpdatePosition()
@@ -255,4 +255,34 @@ public class GLObject extends GLObjectData
         Translate( velocity * orientation[0], velocity * orientation[1], velocity * orientation[2] );
     }
 
+    public void InitCollisionObject( Context context, int resourceId )
+    {
+        List tempList = TextResourceReader.LoadObjFromResource( context, resourceId );
+        vertices = (float[]) tempList.get(0);
+
+
+
+    }
+
+}
+
+
+
+class BoundingSphere
+{
+    float[] center;
+    float radius;
+
+    public BoundingSphere(){}
+
+    public BoundingSphere( float[] pCenter, float pRadius )
+    {
+        center = pCenter.clone();
+        radius = pRadius;
+    }
+
+    public static BoundingSphere Calculate( float pVertices )
+    {
+        return new BoundingSphere();
+    }
 }

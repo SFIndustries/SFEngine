@@ -51,10 +51,9 @@ public class Controls
         dX = -acceleration[0] % 360/** pitchSensitivity*/;
 
         accelerationTm1 = acceleration;
-
     }
 
-    public static void SetOrientation(  )
+    public static void SetOrientation(  ) // 58 fps na istoj dretvi
     {
         // orijentacija uredaja daje promjenu orijentacije aviona
 

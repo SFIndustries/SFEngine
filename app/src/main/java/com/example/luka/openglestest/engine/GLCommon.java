@@ -49,7 +49,7 @@ public class GLCommon
 
     public static float fov = 45;
     public static float nearZ = 0.1f;
-    public static float farZ = 100;
+    public static float farZ = 1000;
 
     public static List<Integer> textureIDList = new ArrayList<>();
 
@@ -108,10 +108,16 @@ public class GLCommon
 
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inScaled = false;   // No pre-scaling
+        //options.inSampleSize = 1;
 
         // Read in the resource
         //int resID = context.getResources().getIdentifier(resourceName, "raw", context.getPackageName());
-        final Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), resourceName, options);
+        Bitmap bitmap = null;
+        try {
+            bitmap = BitmapFactory.decodeResource(context.getResources(), resourceName, options);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         // Bind to the texture in OpenGL
         glBindTexture(GL_TEXTURE_2D, textureHandle[0]);
