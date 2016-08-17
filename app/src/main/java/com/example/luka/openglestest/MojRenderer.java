@@ -105,7 +105,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
         //spaceTexture = LoadTexture(R.raw.space_hd, context);
         spaceTexture = LoadTexture(R.raw.space_sphere_texture, context);
         try {
-            EarthTexture = LoadTexture(R.raw.earth_8k_90p, context);
+            EarthTexture = LoadTexture(R.raw.planet_texture_bake, context);
         } catch (Exception e) {
             e.printStackTrace();
         }
