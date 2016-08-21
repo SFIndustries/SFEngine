@@ -12,7 +12,7 @@ import static com.example.luka.openglestest.engine.GLCommon.viewMatrix;
 
 public class TrackCamera extends GLCamera
 {
-    float trackOrientaionEyeX = 0, trackOrientaionEyeY = -1.0f, trackOrientaionEyeZ = 0.5f;
+    float trackOrientaionEyeX = 0, trackOrientaionEyeY = /*-1.0f*/ -2f, trackOrientaionEyeZ = /*0.5f*/1f;
     float trackOrientaionCenterX = 0, trackOrientaionCenterY = 1.0f, trackOrientaionCenterZ = 0;
 
     float cameraAlpha = 0.05f;
@@ -49,6 +49,7 @@ public class TrackCamera extends GLCamera
                     trackedObject.zAxis[i]*trackOrientaionCenterZ;
         }
 
+        // treba zagladiti glediste, ne ociste
         SetCenter( center[0], center[1], center[2] );
 
         setLookAtM(viewMatrix, 0, eyePosition[0], eyePosition[1], eyePosition[2],

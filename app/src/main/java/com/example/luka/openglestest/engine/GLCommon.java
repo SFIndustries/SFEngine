@@ -18,7 +18,7 @@ import static android.opengl.GLES20.*;
  */
 public class GLCommon
 {
-    public static int program, programPhongTexture, programTexture;
+    public static int program, programPhongTexture, programTexture, programColour;
     public static List<Integer> programList = new ArrayList<>();
 
     public static float[] modelMatrix = new float[16];
@@ -42,6 +42,7 @@ public class GLCommon
     public static int eyePositionLocation;
 
     public static int alphaLocation;
+    public static int colourLocation;
 
     public static float[] center = {0.0f, 0.0f, 0.0f}, centerTm1 = new float[4];
 
@@ -57,6 +58,8 @@ public class GLCommon
 
     public static final int COLOUR = 0, TEXTURE = 1, TEXTURE_BLINN_PHONG = 2, TEXTURE_PHONG = 3;
     public static int renderMode = 1;
+
+    public static GLObject boundingSphere;
 
     public static int InitProgram(Context context, int vertexShaderId, int fragmentShaderId)
     {
@@ -93,6 +96,7 @@ public class GLCommon
         eyePositionLocation = glGetUniformLocation(program, "ociste");
 
         alphaLocation = glGetUniformLocation(program, "alpha");
+        colourLocation = glGetUniformLocation(program, "colour");
 
         glEnableVertexAttribArray(GLCommon.aPositionLocation);
         glEnableVertexAttribArray(GLCommon.aNormalLocation);
@@ -159,7 +163,7 @@ public class GLCommon
         glUniform3f( lightPositionLocation, lightPosition[0], lightPosition[1], lightPosition[2] );
     }
 
-    public void SetRenderMode( int renderModep )
+    public static void SetRenderMode( int renderModep )
     {
         renderMode = renderModep;
         switch ( renderMode )
@@ -169,6 +173,9 @@ public class GLCommon
                 break;
             case TEXTURE_PHONG:
                 UseProgram( programPhongTexture );
+                break;
+            case COLOUR:
+                UseProgram( programColour );
                 break;
         }
     }

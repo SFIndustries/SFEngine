@@ -60,7 +60,7 @@ public class GLObjectStatic extends GLObject
         if ( renderMode != GLCommon.renderMode )
         {
             renderModePrevious = GLCommon.renderMode;
-            UseProgram( renderMode );
+            GLCommon.SetRenderMode( renderMode );
         }
 
         multiplyMM(viewProjectionMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
@@ -91,6 +91,9 @@ public class GLObjectStatic extends GLObject
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glDrawArrays(GL_TRIANGLES, 0, vertices.length / 3);
+
+        if ( renderMode != renderModePrevious )
+            GLCommon.SetRenderMode( renderModePrevious );
 
     }
 

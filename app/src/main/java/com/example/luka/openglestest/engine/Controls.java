@@ -71,6 +71,7 @@ public class Controls
         multiplyMV(controlledObject.xAxis, 0, controlledObject.rotationMatrix, 0, controlledObject.xAxisInit, 0);
         multiplyMV(controlledObject.yAxis, 0, controlledObject.rotationMatrix, 0, controlledObject.yAxisInit, 0);
         multiplyMV(controlledObject.zAxis, 0, controlledObject.rotationMatrix, 0, controlledObject.zAxisInit, 0);
+
     }
 
     public static float[] ExponentialSmoothing( float[] xt, float[] stm1, float alpha )

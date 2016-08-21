@@ -12,6 +12,7 @@ import static android.opengl.Matrix.rotateM;
 import static com.example.luka.openglestest.engine.GLCommon.*;
 
 import com.example.luka.openglestest.engine.Controls;
+import com.example.luka.openglestest.engine.GLCommon;
 import com.example.luka.openglestest.engine.GLObject;
 import com.example.luka.openglestest.engine.GLObjectData;
 import com.example.luka.openglestest.engine.GLObjectStatic;
@@ -49,7 +50,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
     public float radiusThreshold = 100, radiusAlpha0 = 125;
 
     int waterTexture, blueTexture, torusTexture, spaceTexture, EarthTexture;
-    public static GLObject plane, sphere, grid, spaceSphere, Earth;
+    public static GLObject plane, plane1, sphere, grid, spaceSphere, Earth;
     public static List<GLObject> spheres = new ArrayList<>();
 
     int directionX = 1, directionY = -1, directionZ = 1;
@@ -82,9 +83,9 @@ public class MojRenderer implements GLSurfaceView.Renderer
     };
 
 
-    public MojRenderer(Context context)
+    public MojRenderer(Context contextp)
     {
-        this.context = context;
+        context = contextp;
     }
 
     @Override
@@ -116,8 +117,16 @@ public class MojRenderer implements GLSurfaceView.Renderer
         //plane = new GLObject(context, R.raw.f16_1_uv, LoadTexture(R.raw.avion_texture, context));
         plane = new GLObject(context, R.raw.main_ship, LoadTexture(R.raw.main_ship_texture, context));
         plane.SetInitOrientation(new float[]{-plane.yAxis[0], -plane.yAxis[1], -plane.yAxis[2], 1});
-        plane.velocity = 0.1f;
+        plane.velocity = 0.05f; //0.1f;
         //plane.Translate(0, 0, 1);
+        plane.InitCollisionObject( context, R.raw.main_ship_collision );
+        plane.colour = new float[]{1, 0, 0, 1};
+        //plane.SetRenderMode(COLOUR);
+
+        plane1 = new GLObject(context, R.raw.main_ship, LoadTexture(R.raw.main_ship_texture, context));
+        plane1.InitCollisionObject( context, R.raw.main_ship_collision );
+        plane1.TranslateTo(0,-10,0);
+
         Controls.SetControlledObject(plane);
         camera = new TrackCamera();
         ((TrackCamera) camera).SetTrackedObject( plane );
@@ -139,7 +148,8 @@ public class MojRenderer implements GLSurfaceView.Renderer
         Earth = new GLObjectStatic(context, R.raw.earth_700, EarthTexture);
         Earth.Translate(0, -800, 0);
 
-        //bufferIndex = spheres.get(0).bufferIndex;
+        GLCommon.boundingSphere = new GLObject(context, R.raw.sphere1, 0);
+        GLCommon.boundingSphere.SetRenderMode(COLOUR);
 
 //        sphere = new GLObject( sphereData );
 //        sphere.SetTexture( torusTexture );
@@ -195,8 +205,9 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
         programPhongTexture = InitProgram(context, R.raw.vertex_shader_phong, R.raw.fragment_shader_phong);
         programTexture = InitProgram(context, R.raw.vertex_shader_texture, R.raw.fragment_shader_texture);
+        programColour = InitProgram(context, R.raw.vertex_shader_colour, R.raw.fragment_shader_colour);
 
-        SetEyePosition( 0, 1.2f, 0.5f ); // iza aviona, avion gleda prema -y
+        SetEyePosition( 0, 2f, 2f ); // iza aviona, avion gleda prema -y
 
         //glDisable(GL_DITHER);
 
@@ -243,6 +254,11 @@ public class MojRenderer implements GLSurfaceView.Renderer
         if ( renderMode == TEXTURE_PHONG )
             SetUniformsShader();
 
+        if ( plane.Collision( plane1 ) )
+            plane.SetRenderMode( COLOUR );
+        else
+            plane.SetRenderMode( TEXTURE );
+
         plane.UpdatePosition();
 
         Controls.SetOrientation(); // dretva 1 +
@@ -256,7 +272,9 @@ public class MojRenderer implements GLSurfaceView.Renderer
         glEnable(GL_DEPTH_TEST);
 
         plane.Draw();
+        //plane.DrawBoundingSpheres();
 
+        plane1.Draw();
 
         //------------------------------------------------------------------------------------
 
@@ -339,19 +357,6 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
         //plane.Rotate(0.5f, 0.0f, 1.0f, 0);
         //plane.Translate(0.0001f, 0.0001f, 0.0001f);
-
-        // mozda glUniform za npr svjetlo tu staviti unaprijed samo jednom
-        // jer se ne mijenja za svaki objekt
-        // npr
-        // nacrtaj scenu()
-        // {
-        //        glUniform3f( eyePositionLocation, ocisteX, ocisteY, ocisteZ );
-        //        glUniform3f( lightPositionLocation, lightPosition[0], lightPosition[1], lightPosition[2] );
-        //
-        //        za (svaki objekt)
-        //          Draw(objekt);
-        //
-        // }
 
     }
 

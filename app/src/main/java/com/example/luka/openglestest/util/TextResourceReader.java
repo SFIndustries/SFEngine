@@ -154,11 +154,14 @@ public class TextResourceReader
 
     }
 
-    public static float[][] LoadCollisionObject(Context context, int resourceId)
+    public static Vector LoadCollisionObject(Context context, int resourceId)
     {
         Vector vertices = new Vector();
         Vector objects = new Vector();
+
         float[] currentVertex = new float[3];
+        float[][] floatArray2;
+        float[][][] floatArray3;
 
         try {
 
@@ -172,8 +175,24 @@ public class TextResourceReader
             {
                 String[] parts = nextLine.split(" ");
 
+                if (parts[0].equals("g"))
+                {
+                    if ( vertices.isEmpty() )
+                        continue;
+
+                    floatArray2 = new float[vertices.size()][3];
+                    for (int i=0; i<vertices.size(); i++)
+                    {
+                        floatArray2[i] = (float[]) (vertices.elementAt(i));
+                    }
+                    objects.add( floatArray2 );
+                    vertices.clear();
+                }
+
                 if (parts[0].equals("v"))
                 {
+                    currentVertex = new float[3];
+
                     currentVertex[0] = Float.parseFloat(parts[1]);
                     currentVertex[1] = Float.parseFloat(parts[2]);
                     currentVertex[2] = Float.parseFloat(parts[3]);
@@ -186,13 +205,14 @@ public class TextResourceReader
             e.printStackTrace();
         }
 
-        float[][] floatArray = new float[vertices.size()][3];
+        floatArray2 = new float[vertices.size()][3];
         for (int i=0; i<vertices.size(); i++)
         {
-            floatArray[i] = (float[]) (vertices.elementAt(i));
+            floatArray2[i] = (float[]) (vertices.elementAt(i));
         }
+        objects.add( floatArray2 );
 
-        return floatArray;
+        return objects;
     }
 
 }
