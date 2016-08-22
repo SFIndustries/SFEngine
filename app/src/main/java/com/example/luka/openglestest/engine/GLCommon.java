@@ -38,7 +38,8 @@ public class GLCommon
     public static float[] lightPosition = {0.0f, 1.0f, 1.0f};
     public static int lightPositionLocation;
 
-    public static float[] eyePosition = {1.0f, 1.0f, 1.0f, 1.0f}, eyePositionTm1 = new float[4];
+    public static float[]   eyePosition = {1.0f, 1.0f, 1.0f, 1.0f}, eyePositionTm1 = new float[4],
+                            eyePositionSmooth = new float[4], eyePositionSmoothTm1 = new float[4];
     public static int eyePositionLocation;
 
     public static int alphaLocation;

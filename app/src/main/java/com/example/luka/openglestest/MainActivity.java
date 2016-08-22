@@ -18,6 +18,7 @@ import android.os.Bundle;
 import android.opengl.GLSurfaceView;
 
 import android.util.DisplayMetrics;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -130,38 +131,55 @@ public class MainActivity extends Activity implements SensorEventListener {
             return;
         }
 
-//        glSurfaceView.setOnTouchListener(new View.OnTouchListener() {
-//            @Override
-//            public boolean onTouch(View v, MotionEvent event) {
-//                if (event != null) {
-//
-//                    final float aspectRatio = v.getWidth() > v.getHeight() ?
-//                            (float) v.getWidth() / (float) v.getHeight() :
-//                            (float) v.getHeight() / (float) v.getWidth();
-//
-//                    final float normalizedX;
-//                    final float normalizedY;
-//
-//                    if (v.getWidth() > v.getHeight())
-//                    {
-//                        normalizedX = (event.getX() / (float) v.getWidth()) * 2 * aspectRatio - aspectRatio;
-//                        normalizedY = -((event.getY() / (float) v.getHeight()) * 2 - 1);
-//                    } else
-//                    {
-//                        normalizedX = (event.getX() / (float) v.getWidth()) * 2 - 1;
-//                        normalizedY = -((event.getY() / (float) v.getHeight()) * 2 * aspectRatio - aspectRatio);
-//                    }
-//
-//
-//                    if (event.getAction() == MotionEvent.ACTION_DOWN)
-//                    {
-//                        glSurfaceView.queueEvent(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                mojRenderer.handleTouchPress(normalizedX, normalizedY);
-//                            }
-//                        });
-//                    } else if (event.getAction() == MotionEvent.ACTION_MOVE)
+        glSurfaceView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event != null) {
+
+                    final float aspectRatio = v.getWidth() > v.getHeight() ?
+                            (float) v.getWidth() / (float) v.getHeight() :
+                            (float) v.getHeight() / (float) v.getWidth();
+
+                    final float normalizedX;
+                    final float normalizedY;
+
+                    if (v.getWidth() > v.getHeight())
+                    {
+                        normalizedX = (event.getX() / (float) v.getWidth()) * 2 * aspectRatio - aspectRatio;
+                        normalizedY = -((event.getY() / (float) v.getHeight()) * 2 - 1);
+                    } else
+                    {
+                        normalizedX = (event.getX() / (float) v.getWidth()) * 2 - 1;
+                        normalizedY = -((event.getY() / (float) v.getHeight()) * 2 * aspectRatio - aspectRatio);
+                    }
+
+
+                    if (event.getAction() == MotionEvent.ACTION_DOWN)
+                    {
+                        glSurfaceView.queueEvent(new Runnable() {
+                            @Override
+                            public void run() {
+                                //mojRenderer.handleTouchPress(normalizedX, normalizedY);
+                                if (normalizedX > 0.5)
+                                    Controls.accelerationControlledObject = true;
+                                else
+                                    Controls.decelerationControlledObject = true;
+                            }
+                        });
+                    }
+                    else if (event.getAction() == MotionEvent.ACTION_UP)
+                    {
+                        glSurfaceView.queueEvent(new Runnable() {
+                            @Override
+                            public void run() {
+                                if ( Controls.accelerationControlledObject )
+                                    Controls.accelerationControlledObject = false;
+                                else Controls.decelerationControlledObject = false;
+                            }
+                        });
+                    }
+
+//                    else if (event.getAction() == MotionEvent.ACTION_MOVE)
 //                    {
 //                        glSurfaceView.queueEvent(new Runnable() {
 //                            @Override
@@ -172,13 +190,13 @@ public class MainActivity extends Activity implements SensorEventListener {
 //
 //                        });
 //                    }
-//
-//                    return true;
-//                } else return false;
-//            }
-//
-//
-//        });
+
+                    return true;
+                } else return false;
+            }
+
+
+        });
 
         //setContentView(glSurfaceView);
     }

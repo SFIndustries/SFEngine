@@ -6,6 +6,7 @@ package com.example.luka.openglestest;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
+import android.opengl.Matrix;
 
 import static android.opengl.Matrix.rotateM;
 
@@ -117,7 +118,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
         //plane = new GLObject(context, R.raw.f16_1_uv, LoadTexture(R.raw.avion_texture, context));
         plane = new GLObject(context, R.raw.main_ship, LoadTexture(R.raw.main_ship_texture, context));
         plane.SetInitOrientation(new float[]{-plane.yAxis[0], -plane.yAxis[1], -plane.yAxis[2], 1});
-        plane.velocity = 0.05f; //0.1f;
+        //plane.velocity = 0.05f; //0.1f;
         //plane.Translate(0, 0, 1);
         plane.InitCollisionObject( context, R.raw.main_ship_collision );
         plane.colour = new float[]{1, 0, 0, 1};
@@ -126,6 +127,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
         plane1 = new GLObject(context, R.raw.main_ship, LoadTexture(R.raw.main_ship_texture, context));
         plane1.InitCollisionObject( context, R.raw.main_ship_collision );
         plane1.TranslateTo(0,-10,0);
+        plane1.mass = 0.8f;
 
         Controls.SetControlledObject(plane);
         camera = new TrackCamera();
@@ -214,7 +216,9 @@ public class MojRenderer implements GLSurfaceView.Renderer
         setLookAtM( viewMatrix, 0, eyePosition[0], eyePosition[1], eyePosition[2],
                     center[0], center[1], center[2], up[0], up[1], up[2]);
 
-        UseProgram(programTexture);
+        //UseProgram(programTexture);
+
+
     }
 
     @Override
@@ -254,15 +258,31 @@ public class MojRenderer implements GLSurfaceView.Renderer
         if ( renderMode == TEXTURE_PHONG )
             SetUniformsShader();
 
-        if ( plane.Collision( plane1 ) )
-            plane.SetRenderMode( COLOUR );
-        else
-            plane.SetRenderMode( TEXTURE );
+//        if ( plane.Collision( plane1 ) )
+//            plane.SetRenderMode( COLOUR );
+//        else
+//            plane.SetRenderMode( TEXTURE );
 
-        plane.UpdatePosition();
+        plane.Collision( plane1 );
+        plane.UpdatePosition(); // na posebnim dretvama?
+        plane1.UpdatePosition();
 
         Controls.SetOrientation(); // dretva 1 +
         camera.UpdateCamera(); // dretva 2 ?
+
+        if ( Controls.accelerationControlledObject ) {
+            plane.velocity[0] += plane.orientation[0] * plane.accelerationScalar;
+            plane.velocity[1] += plane.orientation[1] * plane.accelerationScalar;
+            plane.velocity[2] += plane.orientation[2] * plane.accelerationScalar;
+            plane.velocityScalar = (float) Matrix.length(plane.velocity[0],plane.velocity[1],plane.velocity[2]);
+        }
+
+        else if ( Controls.decelerationControlledObject ) {
+            plane.velocity[0] -= plane.orientation[0] * plane.accelerationScalar;
+            plane.velocity[1] -= plane.orientation[1] * plane.accelerationScalar;
+            plane.velocity[2] -= plane.orientation[2] * plane.accelerationScalar;
+            plane.velocityScalar = (float) Matrix.length(plane.velocity[0],plane.velocity[1],plane.velocity[2]);
+        }
 
         // pomakni sferu na mjesto aviona
         spaceSphere.TranslateTo( plane.position[0], plane.position[1], plane.position[2] );
@@ -360,12 +380,11 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
     }
 
-    public void handleTouchPress(float normalizedX, float normalizedY)
-    {
+//    public void handleTouchPress(float normalizedX, float normalizedY)
+//    {
 //        stariX = normalizedX;
 //        stariY = normalizedY;
-
-    }
+//    }
 
     public void handleTouchDrag(float normalizedX, float normalizedY)
     {

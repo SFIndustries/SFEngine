@@ -39,13 +39,18 @@ public class GLObject extends GLObjectData
     public float[] orientation = new float[4], initOrientation = new float[4];
 
     public float[] position = {0, 0, 0, 1}, initPosition = {0, 0, 0, 1};
-    public float velocity = 0;
+    public float[] velocity = {0, 0, 0, 1}, velocityTp1 = {0, 0, 0, 1}, objectVelocityTp1 = {0, 0, 0, 1};
+    public float velocityScalar = 0;
+    public float accelerationScalar = 0.005f;
+
+    public float mass = 1;
 
     public float[] colour = {1, 1, 1, 1};
     public float alpha = 1.0f;
 
     List<BoundingSphere> boundingSpheres = new ArrayList<>();
 
+    int i;
 
     public GLObject() {}
 
@@ -325,30 +330,14 @@ public class GLObject extends GLObjectData
         orientation = initOrientation.clone();
     }
 
-    public void UpdatePosition()
+    public void UpdatePosition() // posebna dretva
     {
-        Translate( velocity * orientation[0], velocity * orientation[1], velocity * orientation[2] );
+        Translate( velocity[0] /** orientation[0]*/, velocity[1] /** orientation[1]*/, velocity[2] /** orientation[2]*/ );
     }
 
     public void InitCollisionObject( Context context, int resourceId )
     {
-//        List tempList = TextResourceReader.LoadObjFromResource( context, resourceId );
-//        vertices = (float[]) tempList.get(0);
-//        float[][] vertices2 = new float[vertices.length/3][3];
-//        float[] currentVertex;
-//        for (int i = 0; i<vertices.length; i+=3)
-//        {
-//            currentVertex = new float[3];
-//            currentVertex[0] = vertices[i];
-//            currentVertex[1] = vertices[i+1];
-//            currentVertex[2] = vertices[i+2];
-//            vertices2[i] = currentVertex;
-//        }
-//
-//        boundingSpheres.add( BoundingSphere.Calculate( vertices2 ) );
-
         Vector objects = TextResourceReader.LoadCollisionObject( context, resourceId );
-//        boundingSpheres = new ArrayList<>();
 
         for(int i = 0; i < objects.size(); i++)
         {
@@ -384,7 +373,30 @@ public class GLObject extends GLObjectData
             for(BoundingSphere objectBoundingSphere : object.boundingSpheres)
             {
                 if ( boundingSphere.Collision( objectBoundingSphere ) )
+                {
+                    // savrseno elasticni sudar
+                    // TODO - nakon kolizije pomaknuti objekte tako da nisu u koliziji - trenutno se moze zblenuti
+
+                    // TODO - dodati rotaciju
+
+                    for(i = 0; i < velocity.length; i++)
+                    {
+                        velocityTp1[i] =       (velocity[i] * (mass - object.mass) + 2 * object.mass * object.velocity[i])
+                                        /   (mass + object.mass);
+
+                        objectVelocityTp1[i] =        (object.velocity[i] * (object.mass - mass) + 2 * mass * velocity[i])
+                                                /   (mass + object.mass);
+                    }
+
+                    // ponovo izracunaj skalar brzine
+                    velocity = velocityTp1.clone();
+                    object.velocity = objectVelocityTp1.clone();
+
+                    velocityScalar = Matrix.length(velocity[0],velocity[1],velocity[2]);
+                    object.velocityScalar = Matrix.length(object.velocity[0],object.velocity[1],object.velocity[2]);
+
                     return true;
+                }
             }
         }
         return false;
