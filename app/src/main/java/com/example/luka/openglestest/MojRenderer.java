@@ -8,6 +8,8 @@ import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 
+import static android.opengl.GLES20.glDisable;
+import static android.opengl.Matrix.multiplyMV;
 import static android.opengl.Matrix.rotateM;
 
 import static com.example.luka.openglestest.engine.GLCommon.*;
@@ -40,18 +42,25 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
     float stariX = 0.0f, stariY = 0.0f;
 
-    public GLObjectData sphereData, planeData, gridData;
+    public GLObjectData sphereData, planeData, gridData, projectileData;
 
     public GLObjectData sphere100data, sphere150data;
     public GLObject[] sphere100 = new GLObject[2];
     public GLObject[] sphere150 = new GLObject[27];
+
+    int projectilesCount = 20, projectileIndex = 0;
+    public GLObject[] projectiles;
+    boolean[] projectilesActive = new boolean[projectilesCount];
+
+
     float planeSphereDistancesMin;
 
     public int currentSphere = 0;
     public float radiusThreshold = 100, radiusAlpha0 = 125;
 
     int waterTexture, blueTexture, torusTexture, spaceTexture, EarthTexture;
-    public static GLObject plane, plane1, sphere, grid, spaceSphere, Earth;
+    public static GLObject plane, plane1, sphere, grid, spaceSphere, projectile;
+    public static GLObjectStatic Earth, EarthBloom;
     public static List<GLObject> spheres = new ArrayList<>();
 
     int directionX = 1, directionY = -1, directionZ = 1;
@@ -127,7 +136,8 @@ public class MojRenderer implements GLSurfaceView.Renderer
         plane1 = new GLObject(context, R.raw.main_ship, LoadTexture(R.raw.main_ship_texture, context));
         plane1.InitCollisionObject( context, R.raw.main_ship_collision );
         plane1.TranslateTo(0,-10,0);
-        plane1.mass = 0.8f;
+        plane1.mass = 1f;
+        plane1.momentOfIntertia = 1f;
 
         Controls.SetControlledObject(plane);
         camera = new TrackCamera();
@@ -148,7 +158,32 @@ public class MojRenderer implements GLSurfaceView.Renderer
         }
 
         Earth = new GLObjectStatic(context, R.raw.earth_700, EarthTexture);
-        Earth.Translate(0, -800, 0);
+        Earth.alpha = 1f;
+        Earth.ScaleTo(1f,1f,1f);
+        EarthBloom = new GLObjectStatic(context, R.raw.earth_700, EarthTexture);
+        EarthBloom.alpha = 0.5f;
+        EarthBloom.ScaleTo(1.2f,1.2f,1.2f);
+
+        //Earth = new GLObject(context, R.raw.earth_700, EarthTexture);
+
+        Earth.Translate(0, -700, 0);
+        EarthBloom.Translate(0, -700, 0);
+
+        projectileData = new GLObjectData(context, R.raw.projectile, 0);
+        projectileData.InitCollisionObject(context, R.raw.projectile);
+        projectiles = new GLObject[projectilesCount];
+        projectilesActive = new boolean[projectilesCount];
+        projectileIndex = -1;
+        for (i = 0; i<projectilesCount; i++)
+        {
+            projectiles[i] = new GLObject( projectileData );
+            //projectiles[i].SetInitOrientation(new float[]{-plane.yAxis[0], -plane.yAxis[1], -plane.yAxis[2], 1});
+            projectilesActive[i] = false;
+            projectiles[i].SetRenderMode( COLOUR );
+            projectiles[i].mass = .001f;
+            projectiles[i].momentOfIntertia = .01f;
+
+        }
 
         GLCommon.boundingSphere = new GLObject(context, R.raw.sphere1, 0);
         GLCommon.boundingSphere.SetRenderMode(COLOUR);
@@ -264,8 +299,12 @@ public class MojRenderer implements GLSurfaceView.Renderer
 //            plane.SetRenderMode( TEXTURE );
 
         plane.Collision( plane1 );
-        plane.UpdatePosition(); // na posebnim dretvama?
+        for(i = 0; i < plane.angularVelocities.size(); i++)
+            plane.angularVelocities.set(i, 0f);
+
+        plane.UpdatePosition();
         plane1.UpdatePosition();
+        plane1.UpdateRotation();
 
         Controls.SetOrientation(); // dretva 1 +
         camera.UpdateCamera(); // dretva 2 ?
@@ -284,12 +323,83 @@ public class MojRenderer implements GLSurfaceView.Renderer
             plane.velocityScalar = (float) Matrix.length(plane.velocity[0],plane.velocity[1],plane.velocity[2]);
         }
 
+
+//        for(i = 0; i < projectilesCount; i++)
+//        {
+//            if ( projectilesActive[i] == false )
+//                continue;
+//
+//            projectiles[i].UpdatePosition();
+//        }
+
+        plane.fireRateCounter++;
+        if ( Controls.fire )
+        {
+            if ( plane.fireRateCounter >= plane.fireRate )
+            {
+                plane.fireRateCounter = 0;
+
+                projectileIndex = (projectileIndex + 1) % projectilesCount;
+                //tempVector = plane.initOrientation.clone();
+                //multiplyMV(projectiles[projectileIndex].orientation, 0, plane.rotationMatrix, 0, tempVector, 0);
+                projectiles[projectileIndex].rotationMatrix = plane.rotationMatrix.clone();
+                projectiles[projectileIndex].TranslateTo(plane.gunLeftWing[0], plane.gunLeftWing[1], plane.gunLeftWing[2]);
+                projectiles[projectileIndex].velocity[0] = plane.velocity[0] + plane.orientation[0] * 2;
+                projectiles[projectileIndex].velocity[1] = plane.velocity[1] + plane.orientation[1] * 2;
+                projectiles[projectileIndex].velocity[2] = plane.velocity[2] + plane.orientation[2] * 2;
+                projectilesActive[projectileIndex] = true;
+
+                projectileIndex = (projectileIndex + 1) % projectilesCount;
+                //tempVector = plane.initOrientation.clone();
+                //multiplyMV(projectiles[projectileIndex].orientation, 0, plane.rotationMatrix, 0, tempVector, 0);
+                projectiles[projectileIndex].rotationMatrix = plane.rotationMatrix.clone();
+                projectiles[projectileIndex].TranslateTo(plane.gunRightWing[0], plane.gunRightWing[1], plane.gunRightWing[2]);
+                projectiles[projectileIndex].velocity[0] = plane.velocity[0] + plane.orientation[0] * 2;
+                projectiles[projectileIndex].velocity[1] = plane.velocity[1] + plane.orientation[1] * 2;
+                projectiles[projectileIndex].velocity[2] = plane.velocity[2] + plane.orientation[2] * 2;
+                projectilesActive[projectileIndex] = true;
+            }
+
+        }
+
+
         // pomakni sferu na mjesto aviona
         spaceSphere.TranslateTo( plane.position[0], plane.position[1], plane.position[2] );
 
         glDisable(GL_DEPTH_TEST);
+        //
+        glEnable(GL_BLEND);
+        //glBlendEquation( GL_FUNC_SUBTRACT );
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        //glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
         spaceSphere.Draw();
+
+        // TODO - pretvoriti ovu drugu sferu u static object
+//        Earth.ScaleTo(1.02f,1.02f,1.02f);
+//        Earth.alpha = 0.5f;
+//        Earth.Draw();
+//        Earth.ScaleTo(1f,1f,1f);
+//        Earth.alpha = 1;
+//        Earth.Draw();
+
+        EarthBloom.Draw();
+        Earth.Draw();
+
         glEnable(GL_DEPTH_TEST);
+        glDisable(GL_BLEND);
+
+        for(i = 0; i < projectilesCount; i++)
+        {
+            if ( projectilesActive[i] == false )
+                continue;
+
+            projectiles[i].UpdatePosition();
+            plane1.Collision( projectiles[i] );
+
+            projectiles[i].Draw();
+            //projectiles[i].DrawBoundingSpheres();
+        }
 
         plane.Draw();
         //plane.DrawBoundingSpheres();
@@ -371,7 +481,9 @@ public class MojRenderer implements GLSurfaceView.Renderer
 //                            // TODO pomnoziti s matricama da se dobiju u prostoru
 //        }
 
-        Earth.Draw();
+        //glDisable( GL_DEPTH_TEST );
+
+
 
         //sphere.Draw();
 

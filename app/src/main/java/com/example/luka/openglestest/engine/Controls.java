@@ -28,6 +28,8 @@ public class Controls
     public static boolean accelerationControlledObject = false;
     public static boolean decelerationControlledObject = false;
 
+    public static boolean fire = false;
+
 
     public static void SetControlledObject( GLObject object )
     {

@@ -39,7 +39,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     private boolean rendererSet = false;
     float stariX, stariY;
 
-    Button buttonReset;
+    Button buttonReset, buttonFire;
 
     Resources r;
     DisplayMetrics dm;
@@ -77,6 +77,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
         glSurfaceView = (GLSurfaceView) findViewById(R.id.glSurfaceView);
         buttonReset = (Button) findViewById(R.id.buttonReset);
+        buttonFire = (Button) findViewById(R.id.buttonFire);
         textViewFPSCounter = (TextView) findViewById(R.id.textViewFPSCounter);
         imageViewTexture = (ImageView) findViewById(R.id.imageViewTexture);
 
@@ -86,6 +87,22 @@ public class MainActivity extends Activity implements SensorEventListener {
                 Controls.accelerationInitBool = true;
 
             }
+        });
+
+        buttonFire.setOnTouchListener(new View.OnTouchListener() {
+              @Override
+              public boolean onTouch(View v, MotionEvent event)
+              {
+                  if (event != null)
+                  {
+                      if ( event.getAction() == MotionEvent.ACTION_DOWN )
+                          Controls.fire = true;
+
+                      else if ( event.getAction() == MotionEvent.ACTION_UP )
+                          Controls.fire = false;
+                  }
+                  return true;
+              }
         });
 
         // Check if the system supports OpenGL ES 2.0.

@@ -39,18 +39,47 @@ public class GLObject extends GLObjectData
     public float[] orientation = new float[4], initOrientation = new float[4];
 
     public float[] position = {0, 0, 0, 1}, initPosition = {0, 0, 0, 1};
-    public float[] velocity = {0, 0, 0, 1}, velocityTp1 = {0, 0, 0, 1}, objectVelocityTp1 = {0, 0, 0, 1};
+    public float[] velocity = {0, 0, 0, 1}, velocityTp1 = {0, 0, 0, 1}, tangentialVelocityTp1 = {0, 0, 0, 1};
+
     public float velocityScalar = 0;
     public float accelerationScalar = 0.005f;
+    public float[]  tangentialVelocity = {0, 0, 0, 1}, tangentialVelocityTemp = {0, 0, 0, 1},
+                    translationalVelocity = {0, 0, 0, 1};
+    public float tangentialVelocityScalar;
+    public float collisionRadiusScalar;
+    public float[] collisionRadius;
 
     public float mass = 1;
+    public float momentOfIntertia = .5f;
+
+    public float[] centerOfMass = new float[4], centerOfMassInit = new float[4];
 
     public float[] colour = {1, 1, 1, 1};
     public float alpha = 1.0f;
 
+    public List rotationAxes = new ArrayList();
+    float[] rotationAxis = {0,0,0,1};
+
+    public List angularVelocities = new ArrayList();
+    public float angularVelocity = 0;
+
     List<BoundingSphere> boundingSpheres = new ArrayList<>();
 
-    int i;
+    float[] centerToCenter = {0, 0, 0, 1}, collisionPoint = new float[4];
+    float collisionDepth, centerToCenterDistance;
+
+    public float[] gunLeftWing = {.4f, .3f, -.1f, 1}, gunLeftWingInit = {.4f, .3f, -.1f, 1};
+    public float[] gunRightWing = {-.4f, .3f, -.1f, 1}, gunRightWingInit = {-.4f, .3f, -.1f, 1};
+
+    boolean[] projectilesActive = new boolean[20];
+    float[][] projectilesPosition = new float[20][4];
+    float[][] projectilesVelocity = new float[20][4];
+    int projectileIndex = 0;
+    float projectileVelocityScalar = 1;
+    public int fireRate = 10;
+    public int fireRateCounter = 0;
+
+    int i, j;
 
     public GLObject() {}
 
@@ -77,6 +106,11 @@ public class GLObject extends GLObjectData
         bufferIndex = object.bufferIndex;
 
         textureID = object.textureID;
+
+        boundingSpheres = new ArrayList<>(object.boundingSpheres);
+
+        centerOfMassInit = object.centerOfMassInit;
+        centerOfMass = centerOfMassInit;
 
         //InitBuffersClientSide();
         //InitBuffersVBO();
@@ -158,10 +192,6 @@ public class GLObject extends GLObjectData
     }
 
     public void Draw( /*int bufferIndexp*/ )
-
-    // TODO - koristiti isti VBO za crtanje objekata istog tipa (npr. sfera)
-    // TODO objekti ce se razlikovati po matricama i aktivnoj teksturi
-
     {
         if ( renderMode != GLCommon.renderMode )
         {
@@ -169,6 +199,7 @@ public class GLObject extends GLObjectData
             GLCommon.SetRenderMode( renderMode );
         }
 
+        //---------------------------------------------------------------------
         setIdentityM(modelMatrix, 0);
         multiplyMM(modelMatrix, 0, scaleMatrix, 0, modelMatrix, 0); // 1. ili 3.?
         multiplyMM(modelMatrix, 0, rotationMatrix, 0, modelMatrix, 0); // 2.
@@ -283,10 +314,32 @@ public class GLObject extends GLObjectData
             GLCommon.SetRenderMode( renderModePrevious );
     }
 
+    public void DrawBloom ( int layers, float scalingStep, float alphaStep )
+    {
+        float alphaTemp = 1;
+        float scalingTemp = 1;
+        float alphaOld = alpha;
+        float[] scaleMatrixOld = scaleMatrix.clone();
+
+        for ( int i = 0; i < layers + 1; i++ )
+        {
+            ScaleTo( scalingTemp, scalingTemp, scalingTemp );
+            alpha = alphaTemp;
+            Draw();
+            scalingTemp += scalingStep;
+            alphaTemp -= alphaStep;
+        }
+
+        alpha = alphaOld;
+        scaleMatrix = scaleMatrixOld.clone();
+
+    }
+
     public void Translate( float x, float y, float z )
     {
         translateM(translationMatrix, 0, x, y, z);
         multiplyMV(position, 0, translationMatrix, 0, initPosition, 0);
+        multiplyMV(centerOfMass, 0, translationMatrix, 0, centerOfMassInit, 0);
 
         if (boundingSpheres.size() == 0)
             return;
@@ -294,34 +347,53 @@ public class GLObject extends GLObjectData
             multiplyMV(b.center, 0, rotationMatrix, 0, b.initCenter, 0);
         for(int i = 0; i<boundingSpheres.size(); i++)
             multiplyMV(boundingSpheres.get(i).center, 0, translationMatrix, 0, boundingSpheres.get(i).center, 0);
+
+        multiplyMV(gunLeftWing, 0, rotationMatrix, 0, gunLeftWingInit, 0);
+        multiplyMV(gunLeftWing, 0, translationMatrix, 0, gunLeftWing, 0);
+        multiplyMV(gunRightWing, 0, rotationMatrix, 0, gunRightWingInit, 0);
+        multiplyMV(gunRightWing, 0, translationMatrix, 0, gunRightWing, 0);
 
     }
 
     public void TranslateTo( float x, float y, float z )
     {
         setIdentityM(translationMatrix, 0);
-        translateM(translationMatrix, 0, x, y, z);
-        multiplyMV(position, 0, translationMatrix, 0, initPosition, 0);
 
-        if (boundingSpheres.size() == 0)
-            return;
-        for(BoundingSphere b : boundingSpheres)
-            multiplyMV(b.center, 0, rotationMatrix, 0, b.initCenter, 0);
-        for(int i = 0; i<boundingSpheres.size(); i++)
-            multiplyMV(boundingSpheres.get(i).center, 0, translationMatrix, 0, boundingSpheres.get(i).center, 0);
+        Translate(x, y, z);
+
+//        translateM(translationMatrix, 0, x, y, z);
+//        multiplyMV(position, 0, translationMatrix, 0, initPosition, 0);
+//
+//        if (boundingSpheres.size() == 0)
+//            return;
+//        for(BoundingSphere b : boundingSpheres)
+//            multiplyMV(b.center, 0, rotationMatrix, 0, b.initCenter, 0);
+//        for(int i = 0; i<boundingSpheres.size(); i++)
+//            multiplyMV(boundingSpheres.get(i).center, 0, translationMatrix, 0, boundingSpheres.get(i).center, 0);
 
     }
 
-    public void Rotate( float angle, float xAxis, float yAxis, float zAxis )
+    public void Rotate( float angle, float pxAxis, float pyAxis, float pzAxis )
     {
-        rotateM(rotationMatrix, 0, angle, xAxis, yAxis, zAxis);
+        rotateM(rotationMatrix, 0, angle, pxAxis, pyAxis, pzAxis);
         // TODO prebaciti kontrole u ovu klasu
+
+        multiplyMV(xAxis, 0, rotationMatrix, 0, xAxisInit, 0);
+        multiplyMV(yAxis, 0, rotationMatrix, 0, yAxisInit, 0);
+        multiplyMV(zAxis, 0, rotationMatrix, 0, zAxisInit, 0);
+
+    }
+
+    public void Scale( float x, float y, float z )
+    {
+        scaleM( scaleMatrix, 0, x, y, z );
     }
 
     public void ScaleTo( float x, float y, float z )
     {
-        setIdentityM(scaleMatrix, 0);
-        scaleM( scaleMatrix, 0, x, y, z );
+        setIdentityM( scaleMatrix, 0 );
+        Scale( x, y, z );
+        //scaleM( scaleMatrix, 0, x, y, z );
     }
 
     public void SetInitOrientation( float[] vector )
@@ -330,16 +402,40 @@ public class GLObject extends GLObjectData
         orientation = initOrientation.clone();
     }
 
-    public void UpdatePosition() // posebna dretva
+    public void UpdatePosition() // posebna dretva ? ili 1 dretva za update svih objekata?
     {
         Translate( velocity[0] /** orientation[0]*/, velocity[1] /** orientation[1]*/, velocity[2] /** orientation[2]*/ );
+    }
+
+    // TODO
+    public void UpdateRotation()
+    {
+
+//        if ( angularVelocity < 0.001f )
+//            return;
+//        Rotate(angularVelocity, rotationAxis[0], rotationAxis[1], rotationAxis[2]);
+
+        for ( i=0; i < rotationAxes.size(); i++ )
+        {
+            if ( (float) angularVelocities.get(i) < 0.001f )
+                continue;
+            Rotate(   (float)angularVelocities.get(i),
+                    ((float[])rotationAxes.get(i))[0],((float[])rotationAxes.get(i))[1],((float[])rotationAxes.get(i))[2]);
+        }
+
     }
 
     public void InitCollisionObject( Context context, int resourceId )
     {
         Vector objects = TextResourceReader.LoadCollisionObject( context, resourceId );
 
-        for(int i = 0; i < objects.size(); i++)
+        // sfera koja obuhvaca cijeli objekt
+        boundingSpheres.add( BoundingSphere.Calculate1( (float[][]) objects.elementAt( objects.size() - 1 ) ) );
+        centerOfMassInit = boundingSpheres.get(0).center.clone();
+        centerOfMass = centerOfMassInit.clone();
+        boundingSpheres.remove(0);
+
+        for(int i = 0; i < objects.size()-1; i++)
         {
             boundingSpheres.add( BoundingSphere.Calculate1( (float[][]) objects.elementAt(i) ) );
         }
@@ -368,31 +464,212 @@ public class GLObject extends GLObjectData
 
     public boolean Collision ( GLObject object )
     {
-        for(BoundingSphere boundingSphere : boundingSpheres)
+        // TODO - dodati sferu koja opisuje cijeli objekt pa prvo samo nju provjeriti
+        // TODO - ali njoj ne korigirati radijus
+
+        //if ( ! boundingSpheres.get(0).Collision( object.boundingSpheres.get(0) ) )
+        //    return false;
+
+        // TODO - ovo racuna za sve sfere pa i omedujucu !!!
+        for( BoundingSphere boundingSphere : boundingSpheres )
         {
-            for(BoundingSphere objectBoundingSphere : object.boundingSpheres)
+            for( BoundingSphere objectBoundingSphere : object.boundingSpheres )
             {
                 if ( boundingSphere.Collision( objectBoundingSphere ) )
                 {
-                    // savrseno elasticni sudar
-                    // TODO - nakon kolizije pomaknuti objekte tako da nisu u koliziji - trenutno se moze zblenuti
 
-                    // TODO - dodati rotaciju
+                    // savrseno elasticni sudar
+
+                    // ------------------------------------------------------------------------------
+
+                    collisionPoint = boundingSphere.CollisionPoint( objectBoundingSphere );
+
+                    collisionRadius = new float[4];
+                    collisionRadius[0] =  collisionPoint[0] - centerOfMass[0];
+                    collisionRadius[1] =  collisionPoint[1] - centerOfMass[1];
+                    collisionRadius[2] =  collisionPoint[2] - centerOfMass[2];
+                    collisionRadius[3] =  1;
+
+                    collisionRadiusScalar = Matrix.length(      collisionRadius[0],
+                                                                collisionRadius[1],
+                                                                collisionRadius[2] );
+
+                    object.collisionRadius = new float[4];
+                    object.collisionRadius[0] =  collisionPoint[0] - object.centerOfMass[0];
+                    object.collisionRadius[1] =  collisionPoint[1] - object.centerOfMass[1];
+                    object.collisionRadius[2] =  collisionPoint[2] - object.centerOfMass[2];
+                    object.collisionRadius[3] =  1;
+
+                    object.collisionRadiusScalar = Matrix.length(      object.collisionRadius[0],
+                            object.collisionRadius[1],
+                            object.collisionRadius[2] );
+
+                    tangentialVelocity = new float[4];
+                    object.tangentialVelocity = new float[4];
+
+                    // obodna brzina od dotadasnje rotacija
+
+                    // TODO - umjesto xAxis, y i z napraviti Axes[3]
+
+                    // TODO - rotira se samo naprijed-nazad, nesto se ne rotira?
+
+                    // ovaj objekt
+                    for (i = 0; i < rotationAxes.size(); i++)
+                    {
+                        if ( (float) angularVelocities.get(i) > 0.001f)
+                        {
+                            angularVelocities.set(i, (float) Math.toRadians( (float) angularVelocities.get(i) ));
+                            tangentialVelocityTemp = new float[4];
+                            CrossProduct(tangentialVelocityTemp, (float[]) rotationAxes.get(i), collisionRadius);
+                            tangentialVelocityScalar = Matrix.length(tangentialVelocityTemp[0], tangentialVelocityTemp[1], tangentialVelocityTemp[2]);
+                            if (tangentialVelocityScalar > 0.001)
+                            {
+                                for (j = 0; j < tangentialVelocityTemp.length; j++)
+                                    tangentialVelocityTemp[j] /= tangentialVelocityScalar;
+                                tangentialVelocityScalar = (float) angularVelocities.get(i) * collisionRadiusScalar;
+                                for (j = 0; j < tangentialVelocityTemp.length; j++)
+                                    tangentialVelocityTemp[j] *= tangentialVelocityScalar;
+//                            if (angularVelocity < 0) {
+//                                for (i = 0; i < tangentialVelocityTemp.length; i++)
+//                                    tangentialVelocityTemp[i] = -tangentialVelocityTemp[i];
+//                            }
+                            }
+                            for (j = 0; j < tangentialVelocity.length; j++)
+                            {
+                                tangentialVelocity[j] += tangentialVelocityTemp[j];
+                                //tangentialVelocity[j] += velocity[j]; // ovo tek nakon projekcije
+                            }
+                        }
+                    }
+                    translationalVelocity = new float[4];
+                    VectorProjection(translationalVelocity, velocity, collisionRadius);
+                    for (i = 0; i < tangentialVelocity.length; i++) {
+                        tangentialVelocity[i] += (velocity[i] - translationalVelocity[i]);
+                    }
+
+
+                    // drugi objekt
+                    for (i = 0; i < object.rotationAxes.size(); i++)
+                    {
+                        if ( (float) object.angularVelocities.get(i) > 0.001f) {
+                            object.angularVelocities.set(i, (float) Math.toRadians((float)object.angularVelocities.get(i)));
+                            tangentialVelocityTemp = new float[4];
+                            CrossProduct(tangentialVelocityTemp, (float[]) object.rotationAxes.get(i), object.collisionRadius);
+                            //CrossProduct( tangentialVelocityTemp, object.collisionRadius, object.rotationAxis );
+                            object.tangentialVelocityScalar = Matrix.length(tangentialVelocityTemp[0], tangentialVelocityTemp[1], tangentialVelocityTemp[2]);
+                            for (j = 0; j < tangentialVelocityTemp.length; j++)
+                                tangentialVelocityTemp[j] /= object.tangentialVelocityScalar;
+                            object.tangentialVelocityScalar = (float) object.angularVelocities.get(i) * object.collisionRadiusScalar;
+                            if (object.tangentialVelocityScalar > 0.001) {
+
+                                for (j = 0; j < tangentialVelocityTemp.length; j++)
+                                    tangentialVelocityTemp[j] *= object.tangentialVelocityScalar;
+//                            if (object.angularVelocity < 0) {
+//                                for (i = 0; i < tangentialVelocityTemp.length; i++)
+//                                    tangentialVelocityTemp[i] = -tangentialVelocityTemp[i];
+//                            }
+                            }
+
+                            for (j = 0; j < tangentialVelocity.length; j++) {
+                                object.tangentialVelocity[j] += tangentialVelocityTemp[j];
+                                //object.tangentialVelocity[j] += object.velocity[j];
+                            }
+                        }
+                    }
+                    object.translationalVelocity = new float[4];
+                    VectorProjection( object.translationalVelocity, object.velocity, object.collisionRadius );
+                    for(i = 0; i<object.tangentialVelocity.length; i++)
+                    {
+                        object.tangentialVelocity[i] += (object.velocity[i] - object.translationalVelocity[i]);
+                    }
+
 
                     for(i = 0; i < velocity.length; i++)
                     {
-                        velocityTp1[i] =       (velocity[i] * (mass - object.mass) + 2 * object.mass * object.velocity[i])
-                                        /   (mass + object.mass);
+                        tangentialVelocityTp1[i] =        (tangentialVelocity[i] * (momentOfIntertia - object.momentOfIntertia) + 2 * object.momentOfIntertia * object.tangentialVelocity[i])
+                                /   (momentOfIntertia + object.momentOfIntertia); // treba ici moment tromosti, na masa
 
-                        objectVelocityTp1[i] =        (object.velocity[i] * (object.mass - mass) + 2 * mass * velocity[i])
-                                                /   (mass + object.mass);
+                        object.tangentialVelocityTp1[i] =      (object.tangentialVelocity[i] * (object.momentOfIntertia - momentOfIntertia) + 2 * momentOfIntertia * tangentialVelocity[i])
+                                /   (momentOfIntertia + object.momentOfIntertia); // treba ici moment tromosti, na masa
+                    }
+
+                    // ovaj objekt
+                    float[] newRotationAxis = {0,0,0,1};
+
+                    //CrossProduct( newRotationAxis, collisionRadius, tangentialVelocityTp1 );
+                    CrossProduct( newRotationAxis, tangentialVelocityTp1, collisionRadius );
+                    tangentialVelocityScalar = Matrix.length(tangentialVelocityTp1[0],tangentialVelocityTp1[1],tangentialVelocityTp1[2]);
+
+                    //rotationAxis = newRotationAxis.clone();
+                    if ( rotationAxes.size() == 3 )
+                        rotationAxes.remove(0);
+                    rotationAxes.add( newRotationAxis.clone() );
+                    //angularVelocity = (float) Math.toDegrees(tangentialVelocityScalar / collisionRadiusScalar);
+                    if ( angularVelocities.size() == 3 )
+                        angularVelocities.remove(0);
+                    angularVelocities.add( (float) Math.toDegrees(tangentialVelocityScalar / collisionRadiusScalar) );
+
+
+                    // drugi objekt
+                    newRotationAxis = new float[4];
+
+                    //CrossProduct( newRotationAxis, object.collisionRadius, object.tangentialVelocityTp1 );
+                    CrossProduct( newRotationAxis, object.tangentialVelocityTp1, object.collisionRadius );
+                    tangentialVelocityScalar = Matrix.length(object.tangentialVelocityTp1[0],object.tangentialVelocityTp1[1],object.tangentialVelocityTp1[2]);
+
+                    //object.rotationAxis = newRotationAxis.clone();
+                    if ( object.rotationAxes.size() == 3 )
+                        object.rotationAxes.remove(0);
+                    object.rotationAxes.add( newRotationAxis.clone() );
+                    //object.angularVelocity = (float) Math.toDegrees(tangentialVelocityScalar / object.collisionRadiusScalar);
+                    if ( object.angularVelocities.size() == 3 )
+                        object.angularVelocities.remove(0);
+                    object.angularVelocities.add( (float) Math.toDegrees(tangentialVelocityScalar / object.collisionRadiusScalar) );
+
+                    //-------------------------------------------------------------------------------------------------------
+                    collisionDepth =        boundingSphere.radius + objectBoundingSphere.radius
+                                        -   Matrix.length(  boundingSphere.center[0] - objectBoundingSphere.center[0],
+                                                            boundingSphere.center[1] - objectBoundingSphere.center[1],
+                                                            boundingSphere.center[2] - objectBoundingSphere.center[2] );
+
+                    for(i = 0; i < centerToCenter.length; i++)
+                        centerToCenter[i] = objectBoundingSphere.center[i] - boundingSphere.center[i];
+
+                    centerToCenterDistance = Matrix.length( centerToCenter[0], centerToCenter[1], centerToCenter[2] );
+
+                    for(i = 0; i < centerToCenter.length; i++)
+                    {
+                        centerToCenter[i] /= centerToCenterDistance;
+                        centerToCenter[i] *= collisionDepth;
+                    }
+
+                    object.Translate( centerToCenter[0],centerToCenter[1],centerToCenter[2] );
+
+                    // TODO - dodati rotaciju
+
+                    // TODO - rastaviti brzine na onu koja ce ici na translacijsku i onu koja ce ici na rotacijsku komponentu
+
+
+                    for(i = 0; i < velocity.length; i++)
+                    {
+//                        velocityTp1[i] =        (velocity[i] * (mass - object.mass) + 2 * object.mass * object.velocity[i])
+//                                            /   (mass + object.mass);
+//
+//                        objectVelocityTp1[i] =      (object.velocity[i] * (object.mass - mass) + 2 * mass * velocity[i])
+//                                                /   (mass + object.mass);
+
+                        velocityTp1[i] =        (translationalVelocity[i] * (mass - object.mass) + 2 * object.mass * object.translationalVelocity[i])
+                                /   (mass + object.mass);
+
+                        object.velocityTp1[i] =      (object.translationalVelocity[i] * (object.mass - mass) + 2 * mass * translationalVelocity[i])
+                                /   (mass + object.mass);
                     }
 
                     // ponovo izracunaj skalar brzine
-                    velocity = velocityTp1.clone();
-                    object.velocity = objectVelocityTp1.clone();
+                    //velocity = velocityTp1.clone();
+                    object.velocity = object.velocityTp1.clone();
 
-                    velocityScalar = Matrix.length(velocity[0],velocity[1],velocity[2]);
+                    //velocityScalar = Matrix.length(velocity[0],velocity[1],velocity[2]);
                     object.velocityScalar = Matrix.length(object.velocity[0],object.velocity[1],object.velocity[2]);
 
                     return true;
@@ -400,6 +677,30 @@ public class GLObject extends GLObjectData
             }
         }
         return false;
+    }
+
+    void CrossProduct ( float[] result, float[] u, float[] v )
+    {
+        result[0] = u[1]*v[2] - u[2]*v[1];
+        result[1] = u[2]*v[0] - u[0]*v[2];
+        result[2] = u[0]*v[1] - u[1]*v[0];
+    }
+
+    void VectorProjection ( float[] result, float[] a, float[] b  )
+    {
+        int i;
+        float bLength, dot = 0;
+        float[] normalizedB = new float[4];
+
+        bLength = (float) Matrix.length( b[0], b[1], b[2] );
+        for (i = 0; i < 3; i++)
+            b[i] /= bLength;
+
+        for (i = 0; i < 3; i++)
+            dot += a[i] * b[i];
+
+        for (i = 0; i < 3; i++)
+            result[i] = b[i] * dot;
     }
 
 }
@@ -411,7 +712,6 @@ class BoundingSphere
     float radius;
 
     float[] initCenter = {0,0,0,1};
-    float[] initRotationMatrix = new float[16];
 
     static float radiusCorrection = 0.8f;
 
@@ -422,7 +722,6 @@ class BoundingSphere
         center = pCenter.clone();
         initCenter = pCenter.clone();
         radius = pRadius;
-        setIdentityM(initRotationMatrix, 0);
     }
 
     // ne radi
@@ -516,9 +815,19 @@ class BoundingSphere
 
     public boolean Collision ( BoundingSphere boundingSphere )
     {
-        return Matrix.length(center[0] - boundingSphere.center[0],
-                center[1] - boundingSphere.center[1],
-                center[2] - boundingSphere.center[2]) <= radius + boundingSphere.radius;
+        return  (Matrix.length(center[0] - boundingSphere.center[0],
+            center[1] - boundingSphere.center[1],
+            center[2] - boundingSphere.center[2]) <= radius + boundingSphere.radius);
+    }
+
+    public float[] CollisionPoint ( BoundingSphere boundingSphere )
+    {
+        float[] collisionPoint = new float[]{   (center[0] + boundingSphere.center[0]) / 2f,
+                                                (center[0] + boundingSphere.center[1]) / 2f,
+                                                (center[0] + boundingSphere.center[2]) / 2f,
+                                                1
+                                            };
+        return collisionPoint;
     }
 
 }

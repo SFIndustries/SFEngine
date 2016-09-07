@@ -17,6 +17,7 @@ import static android.opengl.GLES20.glUniformMatrix4fv;
 import static android.opengl.GLES20.glVertexAttribPointer;
 import static android.opengl.Matrix.multiplyMM;
 import static android.opengl.Matrix.multiplyMV;
+import static android.opengl.Matrix.scaleM;
 import static android.opengl.Matrix.setIdentityM;
 import static android.opengl.Matrix.translateM;
 import static com.example.luka.openglestest.engine.GLCommon.UseProgram;
@@ -111,6 +112,23 @@ public class GLObjectStatic extends GLObject
         setIdentityM(translationMatrix, 0);
         translateM(translationMatrix, 0, x, y, z);
         multiplyMV(position, 0, translationMatrix, 0, initPosition, 0);
+
+        setIdentityM(modelMatrix, 0);
+        multiplyMM(modelMatrix, 0, scaleMatrix, 0, modelMatrix, 0); // 1. ili 3.?
+        multiplyMM(modelMatrix, 0, rotationMatrix, 0, modelMatrix, 0); // 2.
+        multiplyMM(modelMatrix, 0, translationMatrix, 0, modelMatrix, 0); // 1. ili 3.?
+    }
+
+    public void Scale( float x, float y, float z )
+    {
+        scaleM( modelMatrix, 0, x, y, z );
+    }
+
+    public void ScaleTo( float x, float y, float z )
+    {
+        setIdentityM( scaleMatrix, 0 );
+        scaleM( scaleMatrix, 0, x, y, z );
+        //scaleM( scaleMatrix, 0, x, y, z );
 
         setIdentityM(modelMatrix, 0);
         multiplyMM(modelMatrix, 0, scaleMatrix, 0, modelMatrix, 0); // 1. ili 3.?

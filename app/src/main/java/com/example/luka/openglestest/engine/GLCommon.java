@@ -50,7 +50,7 @@ public class GLCommon
     public static float[] up = {0.0f, 0.0f, 1.0f, 1.0f}, upTm1 = new float[4];;
 
     public static float fov = 45;
-    public static float nearZ = 0.1f;
+    public static float nearZ = 1f;
     public static float farZ = 1000;
 
     public static List<Integer> textureIDList = new ArrayList<>();
