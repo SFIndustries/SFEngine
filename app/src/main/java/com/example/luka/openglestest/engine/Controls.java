@@ -12,9 +12,9 @@ import static android.opengl.Matrix.rotateM;
 public class Controls
 {
     public static float dY, dX;
-    static float rollSensitivity = 40;
-    static float pitchSensitivity = 40;
-    static float alpha = /*0.03f*/ 0.1f, rollAlpha, pitchAlpha;
+    static float rollSensitivity = 1.0f;
+    static float pitchSensitivity = 1.0f;
+    static float alpha = /*0.03f*/ 0.05f, rollAlpha, pitchAlpha;
 
     static public float[] acceleration = new float[3], accelerationTm1 = new float[3], acceleratonInit = new float[3];
     static public boolean accelerationInitBool = true;
@@ -53,8 +53,8 @@ public class Controls
 
         acceleration = ExponentialSmoothing( acceleration, accelerationTm1, alpha );
 
-        dY = -acceleration[1] % 360/** rollSensitivity*/;
-        dX = -acceleration[0] % 360/** pitchSensitivity*/;
+        dY = -acceleration[1] % 360* rollSensitivity;
+        dX = -acceleration[0] % 360* pitchSensitivity;
 
         accelerationTm1 = acceleration;
     }
