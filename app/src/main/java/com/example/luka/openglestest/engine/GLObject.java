@@ -71,13 +71,9 @@ public class GLObject extends GLObjectData
     public float[] gunLeftWing = {.4f, .3f, -.1f, 1}, gunLeftWingInit = {.4f, .3f, -.1f, 1};
     public float[] gunRightWing = {-.4f, .3f, -.1f, 1}, gunRightWingInit = {-.4f, .3f, -.1f, 1};
 
-    boolean[] projectilesActive = new boolean[20];
-    float[][] projectilesPosition = new float[20][4];
-    float[][] projectilesVelocity = new float[20][4];
-    int projectileIndex = 0;
-    float projectileVelocityScalar = 1;
+    public float projectileVelocityScalar = .3f; // 2f
     public int fireRate = 10;
-    public int fireRateCounter = 0;
+    public long fireRateCounter = 0, lastFired = 0;
 
     int i, j;
 
@@ -666,10 +662,10 @@ public class GLObject extends GLObjectData
                     }
 
                     // ponovo izracunaj skalar brzine
-                    //velocity = velocityTp1.clone();
+                    velocity = velocityTp1.clone();
                     object.velocity = object.velocityTp1.clone();
 
-                    //velocityScalar = Matrix.length(velocity[0],velocity[1],velocity[2]);
+                    velocityScalar = Matrix.length(velocity[0],velocity[1],velocity[2]);
                     object.velocityScalar = Matrix.length(object.velocity[0],object.velocity[1],object.velocity[2]);
 
                     return true;
@@ -677,6 +673,104 @@ public class GLObject extends GLObjectData
             }
         }
         return false;
+    }
+
+    public void Fire()
+    {
+        // TODO - ako je izvan raspona
+        // TODO - ako je daleko pretvoriti u neaktivan
+
+        if ( Math.abs( (GLCommon.frameCounter - lastFired) ) >= fireRate )
+        {
+            lastFired = GLCommon.frameCounter;
+            //fireRateCounter = 0;
+
+            //TODO - napraviti guns[i]
+
+            GLCommon.projectileIndex = (GLCommon.projectileIndex + 1) % GLCommon.projectilesCount;
+            GLCommon.projectiles[GLCommon.projectileIndex].rotationMatrix = rotationMatrix.clone();
+            GLCommon.projectiles[GLCommon.projectileIndex].TranslateTo(gunLeftWing[0], gunLeftWing[1], gunLeftWing[2]);
+            //TODO - dodati POSITION_COUNT u sve petlje
+            for ( i = 0; i < velocity.length; i++)
+                GLCommon.projectiles[GLCommon.projectileIndex].velocity[i] = velocity[i] + orientation[i] * projectileVelocityScalar;
+            GLCommon.projectilesActive[GLCommon.projectileIndex] = true;
+
+            GLCommon.projectileIndex = (GLCommon.projectileIndex + 1) % GLCommon.projectilesCount;
+            //tempVector = plane.initOrientation.clone();
+            //multiplyMV(projectiles[projectileIndex].orientation, 0, plane.rotationMatrix, 0, tempVector, 0);
+            GLCommon.projectiles[GLCommon.projectileIndex].rotationMatrix = rotationMatrix.clone();
+            GLCommon.projectiles[GLCommon.projectileIndex].TranslateTo(gunRightWing[0], gunRightWing[1], gunRightWing[2]);
+            for ( i = 0; i < velocity.length; i++)
+                GLCommon.projectiles[GLCommon.projectileIndex].velocity[i] = velocity[i] + orientation[i] * projectileVelocityScalar;
+            GLCommon.projectilesActive[GLCommon.projectileIndex] = true;
+        }
+    }
+
+    public void ScampFire ( GLObject object )
+    {
+        float a = ( object.position[0] - position[0] );
+        float b = ( object.position[1] - position[1] );
+        float c = ( object.position[2] - position[2] );
+
+        float d = projectileVelocityScalar;
+
+        float g = object.velocity[0];
+        float h = object.velocity[1];
+        float i = object.velocity[2];
+
+        float k; //vpx
+        float e; //vpy
+        float f; //vpz
+
+        k =        (float) (       Math.pow(b,2)*g + Math.pow(c,2)*g - a*c*i
+                        -   Math.sqrt   (
+                                                Math.pow(a,2)
+                                                *
+                                                (
+                                                            Math.pow(c,2)
+                                                    *   (   Math.pow(d,2) - Math.pow(g,2)) + 2*a*c*g*i
+                                                    +   Math.pow(a,2)*(Math.pow(d,2) - Math.pow(i,2))
+                                                    +   Math.pow(b,2)*(Math.pow(d,2) - Math.pow(g,2) - Math.pow(i,2))
+                                                )
+                                        )
+                    )
+                    /
+                ((float)( Math.pow(a,2) + Math.pow(b,2) + Math.pow(c,2) ));
+
+
+        e =  (float)(      -( b *   (
+                            Math.pow(a,2)*g + a*c*i
+                            +   Math.sqrt(
+                                                Math.pow(a,2)
+                                            *   (
+                                                    Math.pow(c,2)*(Math.pow(d,2) - Math.pow(g,2))
+                                                +   2*a*c*g*i + Math.pow(a,2)*(Math.pow(d,2) - Math.pow(i,2))
+                                                +   Math.pow(b,2)*(Math.pow(d,2) - Math.pow(g,2) - Math.pow(i,2))
+                                                )
+                                    )
+                            )
+                    )
+                    /
+                    (a*(Math.pow(a,2) + Math.pow(b,2) + Math.pow(c,2))));
+
+        f =  (float)((-Math.pow(a,2)*c*g + Math.pow(a,3)*i + a*Math.pow(b,2)*i -
+            c*Math.sqrt(Math.pow(a,2)*(Math.pow(c,2)*(Math.pow(d,2) - Math.pow(g,2)) + 2*a*c*g*i + Math.pow(a,2)*(Math.pow(d,2) - Math.pow(i,2)) +
+            Math.pow(b,2)*(Math.pow(d,2) - Math.pow(g,2) - Math.pow(i,2)))))
+            /
+            (a*(Math.pow(a,2) + Math.pow(b,2) + Math.pow(c,2))));
+
+        GLCommon.projectileIndex = (GLCommon.projectileIndex + 1) % GLCommon.projectilesCount;
+        //GLCommon.projectiles[GLCommon.projectileIndex].rotationMatrix = rotationMatrix.clone();
+        GLCommon.projectiles[GLCommon.projectileIndex].TranslateTo(position[0],position[1],position[2]);
+        //TODO - dodati POSITION_COUNT u sve petlje
+
+        GLCommon.projectiles[GLCommon.projectileIndex].velocity[0] = k;
+        GLCommon.projectiles[GLCommon.projectileIndex].velocity[1] = e;
+        GLCommon.projectiles[GLCommon.projectileIndex].velocity[2] = f;
+
+        GLCommon.projectilesActive[GLCommon.projectileIndex] = true;
+
+
     }
 
     void CrossProduct ( float[] result, float[] u, float[] v )

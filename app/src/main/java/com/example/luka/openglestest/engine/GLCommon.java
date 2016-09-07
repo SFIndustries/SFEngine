@@ -60,6 +60,12 @@ public class GLCommon
     public static final int COLOUR = 0, TEXTURE = 1, TEXTURE_BLINN_PHONG = 2, TEXTURE_PHONG = 3;
     public static int renderMode = 1;
 
+    public static int projectilesCount = 20, projectileIndex = 0;
+    public static GLObject[] projectiles;
+    public static boolean[] projectilesActive = new boolean[projectilesCount];
+
+    public static long frameCounter = 0;
+
     public static GLObject boundingSphere;
 
     public static int InitProgram(Context context, int vertexShaderId, int fragmentShaderId)

@@ -48,9 +48,9 @@ public class MojRenderer implements GLSurfaceView.Renderer
     public GLObject[] sphere100 = new GLObject[2];
     public GLObject[] sphere150 = new GLObject[27];
 
-    int projectilesCount = 20, projectileIndex = 0;
-    public GLObject[] projectiles;
-    boolean[] projectilesActive = new boolean[projectilesCount];
+//    int projectilesCount = 20, projectileIndex = 0;
+//    public GLObject[] projectiles;
+//    boolean[] projectilesActive = new boolean[projectilesCount];
 
 
     float planeSphereDistancesMin;
@@ -77,7 +77,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
     float spherePlaneDistance, planeCenterVectorLength;
 
     int i, j, k, x, y, z;
-    int bufferIndex;
+
 
     float FPS = 0, FPSSum = 0, FPSFinal = 0, dt;
     long tStart = -1, t;
@@ -171,18 +171,18 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
         projectileData = new GLObjectData(context, R.raw.projectile, 0);
         projectileData.InitCollisionObject(context, R.raw.projectile);
-        projectiles = new GLObject[projectilesCount];
-        projectilesActive = new boolean[projectilesCount];
-        projectileIndex = -1;
-        for (i = 0; i<projectilesCount; i++)
-        {
-            projectiles[i] = new GLObject( projectileData );
-            //projectiles[i].SetInitOrientation(new float[]{-plane.yAxis[0], -plane.yAxis[1], -plane.yAxis[2], 1});
-            projectilesActive[i] = false;
-            projectiles[i].SetRenderMode( COLOUR );
-            projectiles[i].mass = .001f;
-            projectiles[i].momentOfIntertia = .01f;
 
+        GLCommon.projectiles = new GLObject[GLCommon.projectilesCount];
+        GLCommon.projectilesActive = new boolean[GLCommon.projectilesCount];
+        GLCommon.projectileIndex = -1;
+        for (i = 0; i<GLCommon.projectilesCount; i++)
+        {
+            GLCommon.projectiles[i] = new GLObject( projectileData );
+            //projectiles[i].SetInitOrientation(new float[]{-plane.yAxis[0], -plane.yAxis[1], -plane.yAxis[2], 1});
+            GLCommon.projectilesActive[i] = false;
+            GLCommon.projectiles[i].SetRenderMode( COLOUR );
+            GLCommon.projectiles[i].mass = .001f;
+            GLCommon.projectiles[i].momentOfIntertia = .01f;
         }
 
         GLCommon.boundingSphere = new GLObject(context, R.raw.sphere1, 0);
@@ -252,6 +252,8 @@ public class MojRenderer implements GLSurfaceView.Renderer
                     center[0], center[1], center[2], up[0], up[1], up[2]);
 
         //UseProgram(programTexture);
+
+        GLCommon.frameCounter = 0;
 
 
     }
@@ -332,35 +334,11 @@ public class MojRenderer implements GLSurfaceView.Renderer
 //            projectiles[i].UpdatePosition();
 //        }
 
-        plane.fireRateCounter++;
+        GLCommon.frameCounter = (GLCommon.frameCounter + 1) % 10000;
+
         if ( Controls.fire )
-        {
-            if ( plane.fireRateCounter >= plane.fireRate )
-            {
-                plane.fireRateCounter = 0;
-
-                projectileIndex = (projectileIndex + 1) % projectilesCount;
-                //tempVector = plane.initOrientation.clone();
-                //multiplyMV(projectiles[projectileIndex].orientation, 0, plane.rotationMatrix, 0, tempVector, 0);
-                projectiles[projectileIndex].rotationMatrix = plane.rotationMatrix.clone();
-                projectiles[projectileIndex].TranslateTo(plane.gunLeftWing[0], plane.gunLeftWing[1], plane.gunLeftWing[2]);
-                projectiles[projectileIndex].velocity[0] = plane.velocity[0] + plane.orientation[0] * 2;
-                projectiles[projectileIndex].velocity[1] = plane.velocity[1] + plane.orientation[1] * 2;
-                projectiles[projectileIndex].velocity[2] = plane.velocity[2] + plane.orientation[2] * 2;
-                projectilesActive[projectileIndex] = true;
-
-                projectileIndex = (projectileIndex + 1) % projectilesCount;
-                //tempVector = plane.initOrientation.clone();
-                //multiplyMV(projectiles[projectileIndex].orientation, 0, plane.rotationMatrix, 0, tempVector, 0);
-                projectiles[projectileIndex].rotationMatrix = plane.rotationMatrix.clone();
-                projectiles[projectileIndex].TranslateTo(plane.gunRightWing[0], plane.gunRightWing[1], plane.gunRightWing[2]);
-                projectiles[projectileIndex].velocity[0] = plane.velocity[0] + plane.orientation[0] * 2;
-                projectiles[projectileIndex].velocity[1] = plane.velocity[1] + plane.orientation[1] * 2;
-                projectiles[projectileIndex].velocity[2] = plane.velocity[2] + plane.orientation[2] * 2;
-                projectilesActive[projectileIndex] = true;
-            }
-
-        }
+            plane1.ScampFire(plane);
+            //plane.Fire();
 
 
         // pomakni sferu na mjesto aviona
@@ -395,7 +373,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
                 continue;
 
             projectiles[i].UpdatePosition();
-            plane1.Collision( projectiles[i] );
+            //plane1.Collision( projectiles[i] );
 
             projectiles[i].Draw();
             //projectiles[i].DrawBoundingSpheres();
