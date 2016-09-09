@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/SFEngine.iml" filepath="$PROJECT_DIR$/SFEngine.iml" />
+      <module fileurl="file://$PROJECT_DIR$/OpenGLESTest.iml" filepath="$PROJECT_DIR$/OpenGLESTest.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

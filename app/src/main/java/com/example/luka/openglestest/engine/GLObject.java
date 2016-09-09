@@ -708,65 +708,176 @@ public class GLObject extends GLObjectData
 
     public void ScampFire ( GLObject object )
     {
-        float a = ( object.position[0] - position[0] );
-        float b = ( object.position[1] - position[1] );
-        float c = ( object.position[2] - position[2] );
+        //mozda u racunu malo povecati brzinu mete da gada malo ispred?
+        if (object.position[0] > position[0])
+        {
+            ScampFire1(object);
+            return;
+        }
 
-        float d = projectileVelocityScalar;
+        double a = ( object.position[0] - position[0] );
+        double b = ( object.position[1] - position[1] );
+        double c = ( object.position[2] - position[2] );
 
-        float g = object.velocity[0];
-        float h = object.velocity[1];
-        float i = object.velocity[2];
+        double d = projectileVelocityScalar;
 
-        float k; //vpx
-        float e; //vpy
-        float f; //vpz
+        double g = object.velocity[0];
+        double h = object.velocity[1];
+        double i = object.velocity[2];
 
-        k =        (float) (       Math.pow(b,2)*g + Math.pow(c,2)*g - a*c*i
-                        -   Math.sqrt   (
-                                                Math.pow(a,2)
-                                                *
-                                                (
-                                                            Math.pow(c,2)
-                                                    *   (   Math.pow(d,2) - Math.pow(g,2)) + 2*a*c*g*i
-                                                    +   Math.pow(a,2)*(Math.pow(d,2) - Math.pow(i,2))
-                                                    +   Math.pow(b,2)*(Math.pow(d,2) - Math.pow(g,2) - Math.pow(i,2))
-                                                )
-                                        )
-                    )
-                    /
-                ((float)( Math.pow(a,2) + Math.pow(b,2) + Math.pow(c,2) ));
+        double x; //vpx
+        double y; //vpy
+        double z; //vpz
+
+//        x =        (float) (       Math.pow(b,2)*g + Math.pow(c,2)*g - a*c*i
+//                        -   Math.sqrt   (
+//                                                Math.pow(a,2)
+//                                                *
+//                                                (
+//                                                            Math.pow(c,2)
+//                                                    *   (   Math.pow(d,2) - Math.pow(g,2)) + 2*a*c*g*i
+//                                                    +   Math.pow(a,2)*(Math.pow(d,2) - Math.pow(i,2))
+//                                                    +   Math.pow(b,2)*(Math.pow(d,2) - Math.pow(g,2) - Math.pow(i,2))
+//                                                )
+//                                        )
+//                    )
+//                    /
+//                    ((float)( Math.pow(a,2) + Math.pow(b,2) + Math.pow(c,2) ));
+//
+//
+//        y =  (float)(      -( b *   (
+//                            Math.pow(a,2)*g + a*c*i
+//                            +   Math.sqrt(
+//                                                Math.pow(a,2)
+//                                            *   (
+//                                                    Math.pow(c,2)*(Math.pow(d,2) - Math.pow(g,2))
+//                                                +   2*a*c*g*i + Math.pow(a,2)*(Math.pow(d,2) - Math.pow(i,2))
+//                                                +   Math.pow(b,2)*(Math.pow(d,2) - Math.pow(g,2) - Math.pow(i,2))
+//                                                )
+//                                    )
+//                            )
+//                    )
+//                    /
+//                    (a*(Math.pow(a,2) + Math.pow(b,2) + Math.pow(c,2))));
+//
+//        z =  (float)((-Math.pow(a,2)*c*g + Math.pow(a,3)*i + a*Math.pow(b,2)*i -
+//            c*Math.sqrt(Math.pow(a,2)*(Math.pow(c,2)*(Math.pow(d,2) - Math.pow(g,2)) + 2*a*c*g*i + Math.pow(a,2)*(Math.pow(d,2) - Math.pow(i,2)) +
+//            Math.pow(b,2)*(Math.pow(d,2) - Math.pow(g,2) - Math.pow(i,2)))))
+//            /
+//            (a*(Math.pow(a,2) + Math.pow(b,2) + Math.pow(c,2))));
+
+        x =         -(       -Math.pow(b,2)*g - Math.pow(c,2)*g + a*b*h + a*c*i
+                +   Math.sqrt   (
+                -Math.pow(a,2)
+                        *
+                        (
+                                Math.pow(c,2)
+                                        *   (   -Math.pow(d,2) + Math.pow(g,2) + Math.pow(h,2)) - 2*b*c*h*i
+                                        - 2*a*g * (b*h + c*i) + Math.pow(b,2)*( -Math.pow(d,2) + Math.pow(g,2) + Math.pow(i,2) )
+                                        + Math.pow(a,2)*(-Math.pow(d,2) +Math.pow(h,2) +Math.pow(i,2))
+                        )
+        )
+        )
+                /
+                (( Math.pow(a,2) + Math.pow(b,2) + Math.pow(c,2) ));
 
 
-        e =  (float)(      -( b *   (
-                            Math.pow(a,2)*g + a*c*i
-                            +   Math.sqrt(
-                                                Math.pow(a,2)
-                                            *   (
-                                                    Math.pow(c,2)*(Math.pow(d,2) - Math.pow(g,2))
-                                                +   2*a*c*g*i + Math.pow(a,2)*(Math.pow(d,2) - Math.pow(i,2))
-                                                +   Math.pow(b,2)*(Math.pow(d,2) - Math.pow(g,2) - Math.pow(i,2))
-                                                )
-                                    )
-                            )
-                    )
-                    /
-                    (a*(Math.pow(a,2) + Math.pow(b,2) + Math.pow(c,2))));
+        y =  (1/(a*(Math.pow(a,2) + Math.pow(b,2) + Math.pow(c,2))))*(-Math.pow(a,2)*b*g + Math.pow(a,3)*h + a*Math.pow(c,2)*h - a*b*c*i -
+            b*Math.sqrt(-Math.pow(a,2)*(Math.pow(c,2)*(-Math.pow(d,2) + Math.pow(g,2) + Math.pow(h,2)) - 2*b*c*h*i -
+            2*a*g*(b*h + c*i) + Math.pow(b,2)*(-Math.pow(d,2) + Math.pow(g,2) + Math.pow(i,2)) +
+                    Math.pow(a,2)*(-Math.pow(d,2) + Math.pow(h,2) + Math.pow(i,2)))));
 
-        f =  (float)((-Math.pow(a,2)*c*g + Math.pow(a,3)*i + a*Math.pow(b,2)*i -
-            c*Math.sqrt(Math.pow(a,2)*(Math.pow(c,2)*(Math.pow(d,2) - Math.pow(g,2)) + 2*a*c*g*i + Math.pow(a,2)*(Math.pow(d,2) - Math.pow(i,2)) +
-            Math.pow(b,2)*(Math.pow(d,2) - Math.pow(g,2) - Math.pow(i,2)))))
-            /
-            (a*(Math.pow(a,2) + Math.pow(b,2) + Math.pow(c,2))));
+        z =  (1/(a* (Math.pow(a,2) + Math.pow(b,2) + Math.pow(c,2))))*(-Math.pow(a,2) *c *g - a *b* c* h + Math.pow(a,3) *i + a *Math.pow(b,2)* i -
+            c *Math.sqrt(-Math.pow(a,2)* (Math.pow(c,2)* (-Math.pow(d,2) + Math.pow(g,2) + Math.pow(h,2)) - 2* b *c *h* i -
+            2* a *g* (b* h + c *i) + Math.pow(b,2)* (-Math.pow(d,2) + Math.pow(g,2) + Math.pow(i,2)) +
+                    Math.pow(a,2)* (-Math.pow(d,2) + Math.pow(h,2) + Math.pow(i,2)))));
 
         GLCommon.projectileIndex = (GLCommon.projectileIndex + 1) % GLCommon.projectilesCount;
         //GLCommon.projectiles[GLCommon.projectileIndex].rotationMatrix = rotationMatrix.clone();
         GLCommon.projectiles[GLCommon.projectileIndex].TranslateTo(position[0],position[1],position[2]);
         //TODO - dodati POSITION_COUNT u sve petlje
 
-        GLCommon.projectiles[GLCommon.projectileIndex].velocity[0] = k;
-        GLCommon.projectiles[GLCommon.projectileIndex].velocity[1] = e;
-        GLCommon.projectiles[GLCommon.projectileIndex].velocity[2] = f;
+        // ne radi kad se meta krece
+        // TODO - provjeriti druga rjesenja
+
+//        if ( object.position[0] > position[0] )
+//        {
+//            x = -x;
+//            y = -y;
+//            z = -z;
+//        }
+
+
+        GLCommon.projectiles[GLCommon.projectileIndex].velocity[0] = (float) x;
+        GLCommon.projectiles[GLCommon.projectileIndex].velocity[1] = (float) y;
+        GLCommon.projectiles[GLCommon.projectileIndex].velocity[2] = (float) z;
+
+        GLCommon.projectilesActive[GLCommon.projectileIndex] = true;
+
+
+    }
+
+    public void ScampFire1 ( GLObject object )
+    {
+        double a = ( object.position[0] - position[0] );
+        double b = ( object.position[1] - position[1] );
+        double c = ( object.position[2] - position[2] );
+
+        double d = projectileVelocityScalar;
+
+        double g = object.velocity[0];
+        double h = object.velocity[1];
+        double i = object.velocity[2];
+
+        double x; //vpx
+        double y; //vpy
+        double z; //vpz
+
+        x =         (       Math.pow(b,2)*g + Math.pow(c,2)*g - a*b*h - a*c*i
+                +   Math.sqrt   (
+                -Math.pow(a,2)
+                        *
+                        (
+                                Math.pow(c,2)
+                                        *   (   -Math.pow(d,2) + Math.pow(g,2) + Math.pow(h,2)) - 2*b*c*h*i
+                                        - 2*a*g * (b*h + c*i) + Math.pow(b,2)*( -Math.pow(d,2) + Math.pow(g,2) + Math.pow(i,2) )
+                                        + Math.pow(a,2)*(-Math.pow(d,2) +Math.pow(h,2) +Math.pow(i,2))
+                        )
+        )
+        )
+                /
+                (( Math.pow(a,2) + Math.pow(b,2) + Math.pow(c,2) ));
+
+
+        y =  (1/(a*(Math.pow(a,2) + Math.pow(b,2) + Math.pow(c,2))))*(-Math.pow(a,2)*b*g + Math.pow(a,3)*h + a*Math.pow(c,2)*h - a*b*c*i +
+                b*Math.sqrt(-Math.pow(a,2)*(Math.pow(c,2)*(-Math.pow(d,2) + Math.pow(g,2) + Math.pow(h,2)) - 2*b*c*h*i -
+                        2*a*g*(b*h + c*i) + Math.pow(b,2)*(-Math.pow(d,2) + Math.pow(g,2) + Math.pow(i,2)) +
+                        Math.pow(a,2)*(-Math.pow(d,2) + Math.pow(h,2) + Math.pow(i,2)))));
+
+        z =  (1/(a* (Math.pow(a,2) + Math.pow(b,2) + Math.pow(c,2))))*(-Math.pow(a,2) *c *g - a *b* c* h + Math.pow(a,3) *i + a *Math.pow(b,2)* i +
+                c *Math.sqrt(-Math.pow(a,2)* (Math.pow(c,2)* (-Math.pow(d,2) + Math.pow(g,2) + Math.pow(h,2)) - 2* b *c *h* i -
+                        2* a *g* (b* h + c *i) + Math.pow(b,2)* (-Math.pow(d,2) + Math.pow(g,2) + Math.pow(i,2)) +
+                        Math.pow(a,2)* (-Math.pow(d,2) + Math.pow(h,2) + Math.pow(i,2)))));
+
+        GLCommon.projectileIndex = (GLCommon.projectileIndex + 1) % GLCommon.projectilesCount;
+        //GLCommon.projectiles[GLCommon.projectileIndex].rotationMatrix = rotationMatrix.clone();
+        GLCommon.projectiles[GLCommon.projectileIndex].TranslateTo(position[0],position[1],position[2]);
+        //TODO - dodati POSITION_COUNT u sve petlje
+
+        // ne radi kad se meta krece
+        // TODO - provjeriti druga rjesenja
+
+//        if ( object.position[0] > position[0] )
+//        {
+//            x = -x;
+//            y = -y;
+//            z = -z;
+//        }
+
+
+        GLCommon.projectiles[GLCommon.projectileIndex].velocity[0] = (float) x;
+        GLCommon.projectiles[GLCommon.projectileIndex].velocity[1] = (float) y;
+        GLCommon.projectiles[GLCommon.projectileIndex].velocity[2] = (float) z;
 
         GLCommon.projectilesActive[GLCommon.projectileIndex] = true;
 

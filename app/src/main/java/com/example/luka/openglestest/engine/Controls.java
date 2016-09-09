@@ -82,6 +82,11 @@ public class Controls
         multiplyMV(controlledObject.yAxis, 0, controlledObject.rotationMatrix, 0, controlledObject.yAxisInit, 0);
         multiplyMV(controlledObject.zAxis, 0, controlledObject.rotationMatrix, 0, controlledObject.zAxisInit, 0);
 
+        // TODO - promijeni velocity
+        controlledObject.velocity[0] = controlledObject.orientation[0] * controlledObject.velocityScalar;
+        controlledObject.velocity[1] = controlledObject.orientation[1] * controlledObject.velocityScalar;
+        controlledObject.velocity[2] = controlledObject.orientation[2] * controlledObject.velocityScalar;
+
     }
 
     public static float[] ExponentialSmoothing( float[] xt, float[] stm1, float alpha )

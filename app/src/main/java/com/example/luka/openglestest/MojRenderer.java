@@ -127,6 +127,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
         //plane = new GLObject(context, R.raw.f16_1_uv, LoadTexture(R.raw.avion_texture, context));
         plane = new GLObject(context, R.raw.main_ship, LoadTexture(R.raw.main_ship_texture, context));
         plane.SetInitOrientation(new float[]{-plane.yAxis[0], -plane.yAxis[1], -plane.yAxis[2], 1});
+        plane.velocityScalar = 0;
         //plane.velocity = 0.05f; //0.1f;
         //plane.Translate(0, 0, 1);
         plane.InitCollisionObject( context, R.raw.main_ship_collision );
@@ -138,6 +139,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
         plane1.TranslateTo(0,-10,0);
         plane1.mass = 1f;
         plane1.momentOfIntertia = 1f;
+        plane1.velocityScalar = 0;
 
         Controls.SetControlledObject(plane);
         camera = new TrackCamera();
@@ -308,8 +310,6 @@ public class MojRenderer implements GLSurfaceView.Renderer
         plane1.UpdatePosition();
         plane1.UpdateRotation();
 
-        Controls.SetOrientation(); // dretva 1 +
-        camera.UpdateCamera(); // dretva 2 ?
 
         if ( Controls.accelerationControlledObject ) {
             plane.velocity[0] += plane.orientation[0] * plane.accelerationScalar;
@@ -325,6 +325,8 @@ public class MojRenderer implements GLSurfaceView.Renderer
             plane.velocityScalar = (float) Matrix.length(plane.velocity[0],plane.velocity[1],plane.velocity[2]);
         }
 
+        Controls.SetOrientation(); // dretva 1 +
+        camera.UpdateCamera(); // dretva 2 ?
 
 //        for(i = 0; i < projectilesCount; i++)
 //        {
