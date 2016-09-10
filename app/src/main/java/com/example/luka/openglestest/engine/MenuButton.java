@@ -16,6 +16,7 @@ public class MenuButton extends Button
         this.setLayoutParams(mbs.llParams);
         this.setText(text);
         this.setTextColor(mbs.textColor);
+        this.setTypeface(mbs.textFont);
 
         this.setTextSize((float) mbs.textSize);
     }

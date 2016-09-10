@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.pm.ConfigurationInfo;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -50,6 +51,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     LinearLayout.LayoutParams llParams;
 
     TextView textViewFPSCounter;
+    TextView textViewPlane1Pos;
     ImageView imageViewTexture;
 
     SensorManager mSensorManager;
@@ -78,6 +80,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         glSurfaceView = (GLSurfaceView) findViewById(R.id.glSurfaceView);
         buttonReset = (Button) findViewById(R.id.buttonReset);
         textViewFPSCounter = (TextView) findViewById(R.id.textViewFPSCounter);
+        textViewPlane1Pos = (TextView) findViewById(R.id.textViewPlane1Pos);
         imageViewTexture = (ImageView) findViewById(R.id.imageViewTexture);
 
         buttonReset.setOnClickListener(new View.OnClickListener() {
@@ -251,10 +254,13 @@ public class MainActivity extends Activity implements SensorEventListener {
         llParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, 0, 0.18f);
         llParams.setMargins(0, DpToPixels(6, dmScale), 0, DpToPixels(6, dmScale));
 
-        //mbs = new MenuButtonStyle(R.drawable.btn_blue, llParams, DpToPixels(20, dmScale), 0xffffffff); // b
-        // (int backgroundResource, LinearLayout.LayoutParams llp, int textSize, int textColor)
-        //mbs = new MenuButtonStyle(R.drawable.btn_red, llParams, DpToPixels(20, dmScale), 0xffffffff); // r
-        mbs = new MenuButtonStyle(R.drawable.btn_green, llParams, DpToPixels(20, dmScale), 0xffffffff); // g
+        Typeface font = Typeface.createFromAsset(getAssets(),  "fonts/HighlandGothicFLF.ttf");
+
+
+        //mbs = new MenuButtonStyle(R.drawable.btn_blue, llParams, DpToPixels(20, dmScale), 0xffffffff, font); // b
+        // (int backgroundResource, LinearLayout.LayoutParams llp, int textSize, int textColor, Typeface textFont)
+        //mbs = new MenuButtonStyle(R.drawable.btn_red, llParams, DpToPixels(20, dmScale), 0xffffffff, font); // r
+        mbs = new MenuButtonStyle(R.drawable.btn_green, llParams, DpToPixels(20, dmScale), 0xffffffff, font); // g
 
         MenuButton btnNewGame = new MenuButton(this, mbs, getString(R.string.main_newgame));
         // (Context context, MenuButtonStyle mbs, String text)
