@@ -6,12 +6,18 @@ package com.example.luka.openglestest;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
+import android.opengl.Matrix;
+import android.widget.TextView;
 
+import static android.opengl.GLES20.glDisable;
+import static android.opengl.Matrix.multiplyMV;
 import static android.opengl.Matrix.rotateM;
 
 import static com.example.luka.openglestest.engine.GLCommon.*;
 
+import com.example.luka.openglestest.engine.BSplineCurve;
 import com.example.luka.openglestest.engine.Controls;
+import com.example.luka.openglestest.engine.GLCommon;
 import com.example.luka.openglestest.engine.GLObject;
 import com.example.luka.openglestest.engine.GLObjectData;
 import com.example.luka.openglestest.engine.GLObjectStatic;
@@ -38,19 +44,29 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
     float stariX = 0.0f, stariY = 0.0f;
 
-    public GLObjectData sphereData, planeData, gridData;
+    public GLObjectData sphereData, planeData, gridData, projectileData;
 
     public GLObjectData sphere100data, sphere150data;
     public GLObject[] sphere100 = new GLObject[2];
     public GLObject[] sphere150 = new GLObject[27];
+
+//    int projectilesCount = 20, projectileIndex = 0;
+//    public GLObject[] projectiles;
+//    boolean[] projectilesActive = new boolean[projectilesCount];
+
+
     float planeSphereDistancesMin;
 
     public int currentSphere = 0;
     public float radiusThreshold = 100, radiusAlpha0 = 125;
 
     int waterTexture, blueTexture, torusTexture, spaceTexture, EarthTexture;
-    public static GLObject plane, sphere, grid, spaceSphere, Earth;
+    public static GLObject plane, plane1, sphere, grid, spaceSphere, projectile;
+    public static GLObjectStatic Earth, EarthBloom;
     public static List<GLObject> spheres = new ArrayList<>();
+    BSplineCurve plane1Curve;
+    int currentCurvePointIndex;
+
 
     int directionX = 1, directionY = -1, directionZ = 1;
     float speedX = 0.008f, speedY = 0.005f, speedZ = 0.003f;
@@ -66,12 +82,15 @@ public class MojRenderer implements GLSurfaceView.Renderer
     float spherePlaneDistance, planeCenterVectorLength;
 
     int i, j, k, x, y, z;
-    int bufferIndex;
+
+
+    float TESTx = 0, TESTy = 0, TESTz = 0;
 
     float FPS = 0, FPSSum = 0, FPSFinal = 0, dt;
     long tStart = -1, t;
     float FPSInterval = 0.1f; // [s]
     int FPSi = 1, FPSWait = 10, FPSWaitI = 0;
+
     Runnable FPSRunnable = new Runnable()
     {
         @Override
@@ -82,9 +101,19 @@ public class MojRenderer implements GLSurfaceView.Renderer
     };
 
 
-    public MojRenderer(Context context)
+    Runnable Plane1PosRunnable = new Runnable()
     {
-        this.context = context;
+        @Override
+        public void run()
+        {
+            ((MainActivity) context).textViewPlane1Pos.setText(Float.toString(TESTx) + ", " + Float.toString(TESTy) + ", " + Float.toString(TESTz));
+            ((MainActivity) context).textViewPlane1Pos.setTextSize(30);
+        }
+    };
+
+    public MojRenderer(Context contextp)
+    {
+        context = contextp;
     }
 
     @Override
@@ -116,11 +145,36 @@ public class MojRenderer implements GLSurfaceView.Renderer
         //plane = new GLObject(context, R.raw.f16_1_uv, LoadTexture(R.raw.avion_texture, context));
         plane = new GLObject(context, R.raw.main_ship, LoadTexture(R.raw.main_ship_texture, context));
         plane.SetInitOrientation(new float[]{-plane.yAxis[0], -plane.yAxis[1], -plane.yAxis[2], 1});
-        plane.velocity = 0.1f;
+        plane.velocityScalar = 0;
+        //plane.velocity = 0.05f; //0.1f;
         //plane.Translate(0, 0, 1);
+        plane.InitCollisionObject( context, R.raw.main_ship_collision );
+        plane.colour = new float[]{1, 0, 0, 1};
+        //plane.SetRenderMode(COLOUR);
+
+        plane1 = new GLObject(context, R.raw.main_ship, LoadTexture(R.raw.main_ship_texture, context));
+        plane1.InitCollisionObject( context, R.raw.main_ship_collision );
+        plane1.TranslateTo(0,-10,0);
+        plane1.colour = new float[]{1, 0, 0, 1};
+        plane1.SetInitOrientation(new float[]{-plane1.yAxis[0], -plane1.yAxis[1], -plane1.yAxis[2], 1});
+        plane1.SetRenderMode(COLOUR);
+        plane1.mass = 1f;
+        plane1.momentOfIntertia = 1f;
+        plane1.velocityScalar = 0;
+
+        List<float[]> plane1CurvePoints = new ArrayList<float[]>();
+        plane1CurvePoints.add(new float[]{0, -13, 0, 1});
+        plane1CurvePoints.add(new float[]{3, -15, 0, 1});
+        plane1CurvePoints.add(new float[]{5, -18, 3, 1});
+        plane1CurvePoints.add(new float[]{1, -19, -2, 1});
+        plane1CurvePoints.add(new float[]{-2, -23, -6, 1});
+        plane1CurvePoints.add(new float[]{0, -25, 0, 1});
+        currentCurvePointIndex = 0;
+        plane1Curve = new BSplineCurve(plane1CurvePoints, 0.001f);
+
         Controls.SetControlledObject(plane);
         camera = new TrackCamera();
-        ((TrackCamera) camera).SetTrackedObject( plane );
+        ((TrackCamera) camera).SetTrackedObject( plane1 );
 
         sphereData = new GLObjectData(context, R.raw.sfera, waterTexture);
 
@@ -137,9 +191,35 @@ public class MojRenderer implements GLSurfaceView.Renderer
         }
 
         Earth = new GLObjectStatic(context, R.raw.earth_700, EarthTexture);
-        Earth.Translate(0, -800, 0);
+        Earth.alpha = 1f;
+        Earth.ScaleTo(1f,1f,1f);
+        EarthBloom = new GLObjectStatic(context, R.raw.earth_700, EarthTexture);
+        EarthBloom.alpha = 0.5f;
+        EarthBloom.ScaleTo(1.2f,1.2f,1.2f);
 
-        //bufferIndex = spheres.get(0).bufferIndex;
+        //Earth = new GLObject(context, R.raw.earth_700, EarthTexture);
+
+        Earth.Translate(0, -700, 0);
+        EarthBloom.Translate(0, -700, 0);
+
+        projectileData = new GLObjectData(context, R.raw.projectile, 0);
+        projectileData.InitCollisionObject(context, R.raw.projectile);
+
+        GLCommon.projectiles = new GLObject[GLCommon.projectilesCount];
+        GLCommon.projectilesActive = new boolean[GLCommon.projectilesCount];
+        GLCommon.projectileIndex = -1;
+        for (i = 0; i<GLCommon.projectilesCount; i++)
+        {
+            GLCommon.projectiles[i] = new GLObject( projectileData );
+            //projectiles[i].SetInitOrientation(new float[]{-plane.yAxis[0], -plane.yAxis[1], -plane.yAxis[2], 1});
+            GLCommon.projectilesActive[i] = false;
+            GLCommon.projectiles[i].SetRenderMode( COLOUR );
+            GLCommon.projectiles[i].mass = .001f;
+            GLCommon.projectiles[i].momentOfIntertia = .01f;
+        }
+
+        GLCommon.boundingSphere = new GLObject(context, R.raw.sphere1, 0);
+        GLCommon.boundingSphere.SetRenderMode(COLOUR);
 
 //        sphere = new GLObject( sphereData );
 //        sphere.SetTexture( torusTexture );
@@ -195,15 +275,20 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
         programPhongTexture = InitProgram(context, R.raw.vertex_shader_phong, R.raw.fragment_shader_phong);
         programTexture = InitProgram(context, R.raw.vertex_shader_texture, R.raw.fragment_shader_texture);
+        programColour = InitProgram(context, R.raw.vertex_shader_colour, R.raw.fragment_shader_colour);
 
-        SetEyePosition( 0, 1.2f, 0.5f ); // iza aviona, avion gleda prema -y
+        SetEyePosition( 0, 2f, 2f ); // iza aviona, avion gleda prema -y
 
         //glDisable(GL_DITHER);
 
         setLookAtM( viewMatrix, 0, eyePosition[0], eyePosition[1], eyePosition[2],
                     center[0], center[1], center[2], up[0], up[1], up[2]);
 
-        UseProgram(programTexture);
+        //UseProgram(programTexture);
+
+        GLCommon.frameCounter = 0;
+
+
     }
 
     @Override
@@ -243,20 +328,116 @@ public class MojRenderer implements GLSurfaceView.Renderer
         if ( renderMode == TEXTURE_PHONG )
             SetUniformsShader();
 
+//        if ( plane.Collision( plane1 ) )
+//            plane.SetRenderMode( COLOUR );
+//        else
+//            plane.SetRenderMode( TEXTURE );
+
+        plane.Collision( plane1 );
+        for(i = 0; i < plane.angularVelocities.size(); i++)
+            plane.angularVelocities.set(i, 0f);
+
         plane.UpdatePosition();
+        plane1.UpdatePosition();
+        plane1.UpdateRotation();
+
+
+        if ( Controls.accelerationControlledObject ) {
+            plane.velocity[0] += plane.orientation[0] * plane.accelerationScalar;
+            plane.velocity[1] += plane.orientation[1] * plane.accelerationScalar;
+            plane.velocity[2] += plane.orientation[2] * plane.accelerationScalar;
+            plane.velocityScalar = (float) Matrix.length(plane.velocity[0],plane.velocity[1],plane.velocity[2]);
+        }
+
+        else if ( Controls.decelerationControlledObject ) {
+            plane.velocity[0] -= plane.orientation[0] * plane.accelerationScalar;
+            plane.velocity[1] -= plane.orientation[1] * plane.accelerationScalar;
+            plane.velocity[2] -= plane.orientation[2] * plane.accelerationScalar;
+            plane.velocityScalar = (float) Matrix.length(plane.velocity[0],plane.velocity[1],plane.velocity[2]);
+        }
 
         Controls.SetOrientation(); // dretva 1 +
         camera.UpdateCamera(); // dretva 2 ?
+
+//        for(i = 0; i < projectilesCount; i++)
+//        {
+//            if ( projectilesActive[i] == false )
+//                continue;
+//
+//            projectiles[i].UpdatePosition();
+//        }
+
+        GLCommon.frameCounter = (GLCommon.frameCounter + 1) % 10000;
+
+        if ( Controls.fire )
+            plane1.ScampFire(plane);
+            //plane.Fire();
+
+
+        if (currentCurvePointIndex < plane1Curve.points.size() - 1)
+        {
+            float[] currentCurvePoint = plane1Curve.points.get(currentCurvePointIndex);
+
+            float[] rotationAxis = BSplineCurve.findAxisOfRotation(plane1.initOrientation, plane1Curve.tangentPoints.get(currentCurvePointIndex));
+            float rotationAngle = BSplineCurve.findAngleOfRotation(plane1.initOrientation, plane1Curve.tangentPoints.get(currentCurvePointIndex));
+            Matrix.setIdentityM(plane1.rotationMatrix, 0);
+            //plane1.Rotate(rotationAngle, rotationAxis[0], rotationAxis[1], rotationAxis[2]);
+
+            plane1.TranslateTo(currentCurvePoint[0], currentCurvePoint[1], currentCurvePoint[2]);
+
+            // TEST
+            TESTx = currentCurvePoint[0];
+            TESTy = currentCurvePoint[1];
+            TESTz = currentCurvePoint[2];
+            ((MainActivity) context).runOnUiThread(Plane1PosRunnable);
+            // TEST
+
+            currentCurvePointIndex += 1;
+        }
+
 
         // pomakni sferu na mjesto aviona
         spaceSphere.TranslateTo( plane.position[0], plane.position[1], plane.position[2] );
 
         glDisable(GL_DEPTH_TEST);
+        //
+        glEnable(GL_BLEND);
+        //glBlendEquation( GL_FUNC_SUBTRACT );
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        //glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
         spaceSphere.Draw();
+
+        // TODO - pretvoriti ovu drugu sferu u static object
+//        Earth.ScaleTo(1.02f,1.02f,1.02f);
+//        Earth.alpha = 0.5f;
+//        Earth.Draw();
+//        Earth.ScaleTo(1f,1f,1f);
+//        Earth.alpha = 1;
+//        Earth.Draw();
+
+        EarthBloom.Draw();
+        Earth.Draw();
+
         glEnable(GL_DEPTH_TEST);
+        glDisable(GL_BLEND);
+
+        for(i = 0; i < projectilesCount; i++)
+        {
+            if ( projectilesActive[i] == false )
+                continue;
+
+            projectiles[i].UpdatePosition();
+            //plane1.Collision( projectiles[i] );
+
+            projectiles[i].Draw();
+            //projectiles[i].DrawBoundingSpheres();
+        }
 
         plane.Draw();
+        //plane.DrawBoundingSpheres();
 
+        plane1.Draw();
 
         //------------------------------------------------------------------------------------
 
@@ -333,34 +514,22 @@ public class MojRenderer implements GLSurfaceView.Renderer
 //                            // TODO pomnoziti s matricama da se dobiju u prostoru
 //        }
 
-        Earth.Draw();
+        //glDisable( GL_DEPTH_TEST );
+
+
 
         //sphere.Draw();
 
         //plane.Rotate(0.5f, 0.0f, 1.0f, 0);
         //plane.Translate(0.0001f, 0.0001f, 0.0001f);
 
-        // mozda glUniform za npr svjetlo tu staviti unaprijed samo jednom
-        // jer se ne mijenja za svaki objekt
-        // npr
-        // nacrtaj scenu()
-        // {
-        //        glUniform3f( eyePositionLocation, ocisteX, ocisteY, ocisteZ );
-        //        glUniform3f( lightPositionLocation, lightPosition[0], lightPosition[1], lightPosition[2] );
-        //
-        //        za (svaki objekt)
-        //          Draw(objekt);
-        //
-        // }
-
     }
 
-    public void handleTouchPress(float normalizedX, float normalizedY)
-    {
+//    public void handleTouchPress(float normalizedX, float normalizedY)
+//    {
 //        stariX = normalizedX;
 //        stariY = normalizedY;
-
-    }
+//    }
 
     public void handleTouchDrag(float normalizedX, float normalizedY)
     {

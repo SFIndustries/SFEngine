@@ -7,7 +7,9 @@ import com.example.luka.openglestest.util.TextResourceReader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 import static android.opengl.GLES20.GL_ARRAY_BUFFER;
 import static android.opengl.GLES20.GL_STATIC_DRAW;
@@ -38,6 +40,9 @@ public class GLObjectData
 
     public int textureID;
 
+    List<BoundingSphere> boundingSpheres = new ArrayList<>();
+    public float[] centerOfMass = new float[4], centerOfMassInit = new float[4];
+
     public GLObjectData() {}
 
     public GLObjectData(Context context, int resourceId, int textureIDp )
@@ -50,7 +55,7 @@ public class GLObjectData
         textureID = textureIDp;
 
         //-------------------------------------------------------------------------
-        // jedan buffer za objekte istog tipa   59.2 avg fps
+        // jedan buffer za objekte istog tipa    59.2 avg fps
         // bufferi za svaki objekt              58.8 avg fps
         //                                      ( stednja baterije ukljucena )
 
@@ -89,6 +94,23 @@ public class GLObjectData
 
         interleavedBuffer.limit(0);
         interleavedBuffer = null;
+
+    }
+
+    public void InitCollisionObject( Context context, int resourceId )
+    {
+        Vector objects = TextResourceReader.LoadCollisionObject( context, resourceId );
+
+        // sfera koja obuhvaca cijeli objekt
+        boundingSpheres.add( BoundingSphere.Calculate1( (float[][]) objects.elementAt( objects.size() - 1 ) ) );
+        centerOfMassInit = boundingSpheres.get(0).center.clone();
+        centerOfMass = centerOfMassInit.clone();
+        boundingSpheres.remove(0);
+
+        for(int i = 0; i < objects.size()-1; i++)
+        {
+            boundingSpheres.add( BoundingSphere.Calculate1( (float[][]) objects.elementAt(i) ) );
+        }
 
     }
 }

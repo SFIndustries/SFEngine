@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.pm.ConfigurationInfo;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -18,6 +19,7 @@ import android.os.Bundle;
 import android.opengl.GLSurfaceView;
 
 import android.util.DisplayMetrics;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -38,7 +40,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     private boolean rendererSet = false;
     float stariX, stariY;
 
-    Button buttonReset;
+    Button buttonReset, buttonFire;
 
     Resources r;
     DisplayMetrics dm;
@@ -49,6 +51,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     LinearLayout.LayoutParams llParams;
 
     TextView textViewFPSCounter;
+    TextView textViewPlane1Pos;
     ImageView imageViewTexture;
 
     SensorManager mSensorManager;
@@ -76,7 +79,9 @@ public class MainActivity extends Activity implements SensorEventListener {
 
         glSurfaceView = (GLSurfaceView) findViewById(R.id.glSurfaceView);
         buttonReset = (Button) findViewById(R.id.buttonReset);
+        buttonFire = (Button) findViewById(R.id.buttonFire);
         textViewFPSCounter = (TextView) findViewById(R.id.textViewFPSCounter);
+        textViewPlane1Pos = (TextView) findViewById(R.id.textViewPlane1Pos);
         imageViewTexture = (ImageView) findViewById(R.id.imageViewTexture);
 
         buttonReset.setOnClickListener(new View.OnClickListener() {
@@ -85,6 +90,22 @@ public class MainActivity extends Activity implements SensorEventListener {
                 Controls.accelerationInitBool = true;
 
             }
+        });
+
+        buttonFire.setOnTouchListener(new View.OnTouchListener() {
+              @Override
+              public boolean onTouch(View v, MotionEvent event)
+              {
+                  if (event != null)
+                  {
+                      if ( event.getAction() == MotionEvent.ACTION_DOWN )
+                          Controls.fire = true;
+
+                      else if ( event.getAction() == MotionEvent.ACTION_UP )
+                          Controls.fire = false;
+                  }
+                  return true;
+              }
         });
 
         // Check if the system supports OpenGL ES 2.0.
@@ -130,38 +151,55 @@ public class MainActivity extends Activity implements SensorEventListener {
             return;
         }
 
-//        glSurfaceView.setOnTouchListener(new View.OnTouchListener() {
-//            @Override
-//            public boolean onTouch(View v, MotionEvent event) {
-//                if (event != null) {
-//
-//                    final float aspectRatio = v.getWidth() > v.getHeight() ?
-//                            (float) v.getWidth() / (float) v.getHeight() :
-//                            (float) v.getHeight() / (float) v.getWidth();
-//
-//                    final float normalizedX;
-//                    final float normalizedY;
-//
-//                    if (v.getWidth() > v.getHeight())
-//                    {
-//                        normalizedX = (event.getX() / (float) v.getWidth()) * 2 * aspectRatio - aspectRatio;
-//                        normalizedY = -((event.getY() / (float) v.getHeight()) * 2 - 1);
-//                    } else
-//                    {
-//                        normalizedX = (event.getX() / (float) v.getWidth()) * 2 - 1;
-//                        normalizedY = -((event.getY() / (float) v.getHeight()) * 2 * aspectRatio - aspectRatio);
-//                    }
-//
-//
-//                    if (event.getAction() == MotionEvent.ACTION_DOWN)
-//                    {
-//                        glSurfaceView.queueEvent(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                mojRenderer.handleTouchPress(normalizedX, normalizedY);
-//                            }
-//                        });
-//                    } else if (event.getAction() == MotionEvent.ACTION_MOVE)
+        glSurfaceView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event != null) {
+
+                    final float aspectRatio = v.getWidth() > v.getHeight() ?
+                            (float) v.getWidth() / (float) v.getHeight() :
+                            (float) v.getHeight() / (float) v.getWidth();
+
+                    final float normalizedX;
+                    final float normalizedY;
+
+                    if (v.getWidth() > v.getHeight())
+                    {
+                        normalizedX = (event.getX() / (float) v.getWidth()) * 2 * aspectRatio - aspectRatio;
+                        normalizedY = -((event.getY() / (float) v.getHeight()) * 2 - 1);
+                    } else
+                    {
+                        normalizedX = (event.getX() / (float) v.getWidth()) * 2 - 1;
+                        normalizedY = -((event.getY() / (float) v.getHeight()) * 2 * aspectRatio - aspectRatio);
+                    }
+
+
+                    if (event.getAction() == MotionEvent.ACTION_DOWN)
+                    {
+                        glSurfaceView.queueEvent(new Runnable() {
+                            @Override
+                            public void run() {
+                                //mojRenderer.handleTouchPress(normalizedX, normalizedY);
+                                if (normalizedX > 0.5)
+                                    Controls.accelerationControlledObject = true;
+                                else
+                                    Controls.decelerationControlledObject = true;
+                            }
+                        });
+                    }
+                    else if (event.getAction() == MotionEvent.ACTION_UP)
+                    {
+                        glSurfaceView.queueEvent(new Runnable() {
+                            @Override
+                            public void run() {
+                                if ( Controls.accelerationControlledObject )
+                                    Controls.accelerationControlledObject = false;
+                                else Controls.decelerationControlledObject = false;
+                            }
+                        });
+                    }
+
+//                    else if (event.getAction() == MotionEvent.ACTION_MOVE)
 //                    {
 //                        glSurfaceView.queueEvent(new Runnable() {
 //                            @Override
@@ -172,13 +210,13 @@ public class MainActivity extends Activity implements SensorEventListener {
 //
 //                        });
 //                    }
-//
-//                    return true;
-//                } else return false;
-//            }
-//
-//
-//        });
+
+                    return true;
+                } else return false;
+            }
+
+
+        });
 
         //setContentView(glSurfaceView);
     }
@@ -233,10 +271,13 @@ public class MainActivity extends Activity implements SensorEventListener {
         llParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, 0, 0.18f);
         llParams.setMargins(0, DpToPixels(6, dmScale), 0, DpToPixels(6, dmScale));
 
-        //mbs = new MenuButtonStyle(R.drawable.btn_blue, llParams, DpToPixels(20, dmScale), 0xffffffff); // b
-        // (int backgroundResource, LinearLayout.LayoutParams llp, int textSize, int textColor)
-        //mbs = new MenuButtonStyle(R.drawable.btn_red, llParams, DpToPixels(20, dmScale), 0xffffffff); // r
-        mbs = new MenuButtonStyle(R.drawable.btn_green, llParams, DpToPixels(20, dmScale), 0xffffffff); // g
+        Typeface font = Typeface.createFromAsset(getAssets(),  "fonts/HighlandGothicFLF.ttf");
+
+
+        //mbs = new MenuButtonStyle(R.drawable.btn_blue, llParams, DpToPixels(20, dmScale), 0xffffffff, font); // b
+        // (int backgroundResource, LinearLayout.LayoutParams llp, int textSize, int textColor, Typeface textFont)
+        //mbs = new MenuButtonStyle(R.drawable.btn_red, llParams, DpToPixels(20, dmScale), 0xffffffff, font); // r
+        mbs = new MenuButtonStyle(R.drawable.btn_green, llParams, DpToPixels(20, dmScale), 0xffffffff, font); // g
 
         MenuButton btnNewGame = new MenuButton(this, mbs, getString(R.string.main_newgame));
         // (Context context, MenuButtonStyle mbs, String text)

@@ -45,6 +45,29 @@
         android:textStyle="bold"
         android:textColor="#ffff00" />
 
+    <TextView
+        android:text="Large Text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textViewPlane1Pos"
+        android:elevation="0dp"
+        android:textColor="#ffff00"
+        android:layout_weight="1"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="12mm"
+        android:layout_height="12mm"
+        android:id="@+id/buttonFire"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:clickable="false"
+        android:layout_marginRight="5dp"
+        android:layout_marginBottom="5dp"
+        android:background="#ff0000" />
+
     <!--android:layout_alignParentTop="true"-->
         <!--android:layout_alignParentLeft="true"-->
         <!--android:layout_alignParentStart="true" />-->

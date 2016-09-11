@@ -12,9 +12,9 @@ import static android.opengl.Matrix.rotateM;
 public class Controls
 {
     public static float dY, dX;
-    static float rollSensitivity = 40;
-    static float pitchSensitivity = 40;
-    static float alpha = 0.03f, rollAlpha, pitchAlpha;
+    static float rollSensitivity = 1.0f;
+    static float pitchSensitivity = 1.0f;
+    static float alpha = /*0.03f*/ 0.05f, rollAlpha, pitchAlpha;
 
     static public float[] acceleration = new float[3], accelerationTm1 = new float[3], acceleratonInit = new float[3];
     static public boolean accelerationInitBool = true;
@@ -24,6 +24,12 @@ public class Controls
     public static final Object mutex = new Object();
 
     static GLObject controlledObject;
+
+    public static boolean accelerationControlledObject = false;
+    public static boolean decelerationControlledObject = false;
+
+    public static boolean fire = false;
+
 
     public static void SetControlledObject( GLObject object )
     {
@@ -47,8 +53,8 @@ public class Controls
 
         acceleration = ExponentialSmoothing( acceleration, accelerationTm1, alpha );
 
-        dY = -acceleration[1] % 360/** rollSensitivity*/;
-        dX = -acceleration[0] % 360/** pitchSensitivity*/;
+        dY = -acceleration[1] % 360* rollSensitivity;
+        dX = -acceleration[0] % 360* pitchSensitivity;
 
         accelerationTm1 = acceleration;
     }
@@ -68,9 +74,19 @@ public class Controls
         tempVector = controlledObject.initOrientation.clone();
         multiplyMV(controlledObject.orientation, 0, controlledObject.rotationMatrix, 0, tempVector, 0);
 
+        controlledObject.velocity[0] = controlledObject.orientation[0] * controlledObject.velocityScalar;
+        controlledObject.velocity[1] = controlledObject.orientation[1] * controlledObject.velocityScalar;
+        controlledObject.velocity[2] = controlledObject.orientation[2] * controlledObject.velocityScalar;
+
         multiplyMV(controlledObject.xAxis, 0, controlledObject.rotationMatrix, 0, controlledObject.xAxisInit, 0);
         multiplyMV(controlledObject.yAxis, 0, controlledObject.rotationMatrix, 0, controlledObject.yAxisInit, 0);
         multiplyMV(controlledObject.zAxis, 0, controlledObject.rotationMatrix, 0, controlledObject.zAxisInit, 0);
+
+        // TODO - promijeni velocity
+        controlledObject.velocity[0] = controlledObject.orientation[0] * controlledObject.velocityScalar;
+        controlledObject.velocity[1] = controlledObject.orientation[1] * controlledObject.velocityScalar;
+        controlledObject.velocity[2] = controlledObject.orientation[2] * controlledObject.velocityScalar;
+
     }
 
     public static float[] ExponentialSmoothing( float[] xt, float[] stm1, float alpha )
