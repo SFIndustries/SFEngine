@@ -7,6 +7,7 @@ package com.example.luka.openglestest;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
+import android.widget.TextView;
 
 import static android.opengl.GLES20.glDisable;
 import static android.opengl.Matrix.multiplyMV;
@@ -14,6 +15,7 @@ import static android.opengl.Matrix.rotateM;
 
 import static com.example.luka.openglestest.engine.GLCommon.*;
 
+import com.example.luka.openglestest.engine.BSplineCurve;
 import com.example.luka.openglestest.engine.Controls;
 import com.example.luka.openglestest.engine.GLCommon;
 import com.example.luka.openglestest.engine.GLObject;
@@ -62,6 +64,9 @@ public class MojRenderer implements GLSurfaceView.Renderer
     public static GLObject plane, plane1, sphere, grid, spaceSphere, projectile;
     public static GLObjectStatic Earth, EarthBloom;
     public static List<GLObject> spheres = new ArrayList<>();
+    BSplineCurve plane1Curve;
+    int currentCurvePointIndex;
+
 
     int directionX = 1, directionY = -1, directionZ = 1;
     float speedX = 0.008f, speedY = 0.005f, speedZ = 0.003f;
@@ -79,10 +84,13 @@ public class MojRenderer implements GLSurfaceView.Renderer
     int i, j, k, x, y, z;
 
 
+    float TESTx = 0, TESTy = 0, TESTz = 0;
+
     float FPS = 0, FPSSum = 0, FPSFinal = 0, dt;
     long tStart = -1, t;
     float FPSInterval = 0.1f; // [s]
     int FPSi = 1, FPSWait = 10, FPSWaitI = 0;
+
     Runnable FPSRunnable = new Runnable()
     {
         @Override
@@ -92,6 +100,16 @@ public class MojRenderer implements GLSurfaceView.Renderer
         }
     };
 
+
+    Runnable Plane1PosRunnable = new Runnable()
+    {
+        @Override
+        public void run()
+        {
+            ((MainActivity) context).textViewPlane1Pos.setText(Float.toString(TESTx) + ", " + Float.toString(TESTy) + ", " + Float.toString(TESTz));
+            ((MainActivity) context).textViewPlane1Pos.setTextSize(30);
+        }
+    };
 
     public MojRenderer(Context contextp)
     {
@@ -137,13 +155,27 @@ public class MojRenderer implements GLSurfaceView.Renderer
         plane1 = new GLObject(context, R.raw.main_ship, LoadTexture(R.raw.main_ship_texture, context));
         plane1.InitCollisionObject( context, R.raw.main_ship_collision );
         plane1.TranslateTo(0,-10,0);
+        plane1.colour = new float[]{1, 0, 0, 1};
+        plane1.SetInitOrientation(new float[]{-plane1.yAxis[0], -plane1.yAxis[1], -plane1.yAxis[2], 1});
+        plane1.SetRenderMode(COLOUR);
         plane1.mass = 1f;
         plane1.momentOfIntertia = 1f;
         plane1.velocityScalar = 0;
 
+
+        List<float[]> plane1CurvePoints = new ArrayList<float[]>();
+        plane1CurvePoints.add(new float[]{0, -13, 0, 1});
+        plane1CurvePoints.add(new float[]{3, -15, 0, 1});
+        plane1CurvePoints.add(new float[]{5, -18, 3, 1});
+        plane1CurvePoints.add(new float[]{1, -19, -2, 1});
+        plane1CurvePoints.add(new float[]{-2, -23, -6, 1});
+        plane1CurvePoints.add(new float[]{0, -25, 0, 1});
+        currentCurvePointIndex = 0;
+        plane1Curve = new BSplineCurve(plane1CurvePoints, 0.001f);
+
         Controls.SetControlledObject(plane);
         camera = new TrackCamera();
-        ((TrackCamera) camera).SetTrackedObject( plane );
+        ((TrackCamera) camera).SetTrackedObject( plane1 );
 
         sphereData = new GLObjectData(context, R.raw.sfera, waterTexture);
 
@@ -168,8 +200,10 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
         //Earth = new GLObject(context, R.raw.earth_700, EarthTexture);
 
+
         Earth.Translate(0, -700, 0);
         EarthBloom.Translate(0, -700, 0);
+
 
         projectileData = new GLObjectData(context, R.raw.projectile, 0);
         projectileData.InitCollisionObject(context, R.raw.projectile);
@@ -341,6 +375,28 @@ public class MojRenderer implements GLSurfaceView.Renderer
         if ( Controls.fire )
             plane1.ScampFire(plane);
             //plane.Fire();
+
+
+        if (currentCurvePointIndex < plane1Curve.points.size() - 1)
+        {
+            float[] currentCurvePoint = plane1Curve.points.get(currentCurvePointIndex);
+
+            float[] rotationAxis = BSplineCurve.findAxisOfRotation(plane1.initOrientation, plane1Curve.tangentPoints.get(currentCurvePointIndex));
+            float rotationAngle = BSplineCurve.findAngleOfRotation(plane1.initOrientation, plane1Curve.tangentPoints.get(currentCurvePointIndex));
+            Matrix.setIdentityM(plane1.rotationMatrix, 0);
+            //plane1.Rotate(rotationAngle, rotationAxis[0], rotationAxis[1], rotationAxis[2]);
+
+            plane1.TranslateTo(currentCurvePoint[0], currentCurvePoint[1], currentCurvePoint[2]);
+
+            // TEST
+            TESTx = currentCurvePoint[0];
+            TESTy = currentCurvePoint[1];
+            TESTz = currentCurvePoint[2];
+            ((MainActivity) context).runOnUiThread(Plane1PosRunnable);
+            // TEST
+
+            currentCurvePointIndex += 1;
+        }
 
 
         // pomakni sferu na mjesto aviona

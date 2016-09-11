@@ -1,5 +1,6 @@
 package com.example.luka.openglestest.engine;
 
+import android.graphics.Typeface;
 import android.widget.LinearLayout;
 
 /**
@@ -11,6 +12,16 @@ public class MenuButtonStyle
     LinearLayout.LayoutParams llParams;
     int textSize;
     int textColor;
+    Typeface textFont;
+
+    public MenuButtonStyle(int backgroundResource, LinearLayout.LayoutParams llParams, int textSize, int textColor, Typeface textFont)
+    {
+        this.backgroundResource = backgroundResource;
+        this.llParams = llParams;
+        this.textSize = textSize;
+        this.textColor = textColor;
+        this.textFont = textFont;
+    }
 
     public MenuButtonStyle(int backgroundResource, LinearLayout.LayoutParams llParams, int textSize, int textColor)
     {
