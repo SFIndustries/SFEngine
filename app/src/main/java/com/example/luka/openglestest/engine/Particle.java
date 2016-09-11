@@ -9,7 +9,6 @@ public class Particle
     int lifetime, lifetimeCounter;
     float[] pos, prevPos, velocity;
     float edge;
-
     boolean alive;
 
     Particle()
@@ -21,6 +20,7 @@ public class Particle
     {
         alive = p.alive;
     }
+
 
     void setParams(float[] velocityP, float[] posP, int lifetimeP, float edgeP)
     {

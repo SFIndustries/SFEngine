@@ -162,6 +162,7 @@ public class MojRenderer implements GLSurfaceView.Renderer
         plane1.momentOfIntertia = 1f;
         plane1.velocityScalar = 0;
 
+
         List<float[]> plane1CurvePoints = new ArrayList<float[]>();
         plane1CurvePoints.add(new float[]{0, -13, 0, 1});
         plane1CurvePoints.add(new float[]{3, -15, 0, 1});
@@ -199,8 +200,10 @@ public class MojRenderer implements GLSurfaceView.Renderer
 
         //Earth = new GLObject(context, R.raw.earth_700, EarthTexture);
 
+
         Earth.Translate(0, -700, 0);
         EarthBloom.Translate(0, -700, 0);
+
 
         projectileData = new GLObjectData(context, R.raw.projectile, 0);
         projectileData.InitCollisionObject(context, R.raw.projectile);
