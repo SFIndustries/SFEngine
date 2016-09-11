@@ -156,7 +156,7 @@ public class TextResourceReader
 
     public static Vector LoadCollisionObject(Context context, int resourceId)
     {
-        Vector vertices = new Vector();
+        Vector vertices = new Vector(), allVertices = new Vector();
         Vector objects = new Vector();
 
         float[] currentVertex = new float[3];
@@ -198,6 +198,7 @@ public class TextResourceReader
                     currentVertex[2] = Float.parseFloat(parts[3]);
 
                     vertices.add(currentVertex);
+                    allVertices.add(currentVertex);
                 }
             }
 
@@ -209,6 +210,14 @@ public class TextResourceReader
         for (int i=0; i<vertices.size(); i++)
         {
             floatArray2[i] = (float[]) (vertices.elementAt(i));
+        }
+        objects.add( floatArray2 );
+
+        // cijeli objekt
+        floatArray2 = new float[allVertices.size()][3];
+        for (int i=0; i<allVertices.size(); i++)
+        {
+            floatArray2[i] = (float[]) (allVertices.elementAt(i));
         }
         objects.add( floatArray2 );
 

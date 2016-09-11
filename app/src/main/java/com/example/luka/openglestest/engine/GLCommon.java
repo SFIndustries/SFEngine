@@ -50,7 +50,7 @@ public class GLCommon
     public static float[] up = {0.0f, 0.0f, 1.0f, 1.0f}, upTm1 = new float[4];;
 
     public static float fov = 45;
-    public static float nearZ = 0.1f;
+    public static float nearZ = 1f;
     public static float farZ = 1000;
 
     public static List<Integer> textureIDList = new ArrayList<>();
@@ -59,6 +59,12 @@ public class GLCommon
 
     public static final int COLOUR = 0, TEXTURE = 1, TEXTURE_BLINN_PHONG = 2, TEXTURE_PHONG = 3;
     public static int renderMode = 1;
+
+    public static int projectilesCount = 20, projectileIndex = 0;
+    public static GLObject[] projectiles;
+    public static boolean[] projectilesActive = new boolean[projectilesCount];
+
+    public static long frameCounter = 0;
 
     public static GLObject boundingSphere;
 

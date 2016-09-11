@@ -11,5 +11,5 @@ uniform float alpha;
 void main()
 {
     //gl_FragColor = vec4(texture2D( u_Texture, v_TexCoordinate).rgb, alpha );
-    gl_FragColor = texture2D( u_Texture, v_TexCoordinate);
+    gl_FragColor = vec4 ( texture2D( u_Texture, v_TexCoordinate).xyz, alpha );
 }
